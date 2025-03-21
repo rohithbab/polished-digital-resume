@@ -10,7 +10,7 @@ import FloatingIcons from '../components/FloatingIcons';
 
 const Index = () => {
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-background to-secondary/30 dark:from-background dark:to-secondary/10">
       <FloatingIcons />
       <Navbar />
       <Hero />

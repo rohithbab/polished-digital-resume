@@ -74,7 +74,15 @@ export default {
 				},
 				float: {
 					'0%, 100%': { transform: 'translateY(0)' },
-					'50%': { transform: 'translateY(-10px)' },
+					'50%': { transform: 'translateY(-15px)' },
+				},
+				floatHorizontal: {
+					'0%, 100%': { transform: 'translateX(0)' },
+					'50%': { transform: 'translateX(10px)' },
+				},
+				pulse: {
+					'0%, 100%': { opacity: '1', transform: 'scale(1)' },
+					'50%': { opacity: '0.7', transform: 'scale(0.95)' },
 				},
 				fadeIn: {
 					'0%': { opacity: '0', transform: 'translateY(10px)' },
@@ -96,13 +104,13 @@ export default {
 					'0%': { transform: 'scale(0.95)', opacity: '0' },
 					'100%': { transform: 'scale(1)', opacity: '1' },
 				},
-				spin: {
-					'from': { transform: 'rotate(0deg)' },
-					'to': { transform: 'rotate(360deg)' },
+				rotation: {
+					'0%': { transform: 'rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg)' },
 				},
-				pulse: {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.5' },
+				glow: {
+					'0%, 100%': { filter: 'drop-shadow(0 0 5px currentColor)' },
+					'50%': { filter: 'drop-shadow(0 0 15px currentColor)' },
 				},
 			},
 			animation: {
@@ -111,17 +119,19 @@ export default {
 				"float": "float 6s ease-in-out infinite",
 				"float-slow": "float 8s ease-in-out infinite",
 				"float-slower": "float 10s ease-in-out infinite",
+				"float-horizontal": "floatHorizontal 8s ease-in-out infinite",
 				"fade-in": "fadeIn 0.6s ease-out forwards",
 				"fade-in-left": "fadeInLeft 0.6s ease-out forwards",
 				"fade-in-right": "fadeInRight 0.6s ease-out forwards",
 				"fade-in-slow": "fadeInSlow 1.2s ease-out forwards",
 				"scale-in": "scaleIn 0.5s ease-out forwards",
-				"spin-slow": "spin 8s linear infinite",
-				"pulse-slow": "pulse 4s ease-in-out infinite",
+				"rotate-slow": "rotation 15s linear infinite",
+				"pulse-glow": "glow 3s ease-in-out infinite",
+				"pulse-icon": "pulse 4s ease-in-out infinite",
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
-				heading: ['SF Pro Display', 'Inter', 'sans-serif'],
+				sans: ['Poppins', 'sans-serif'],
+				heading: ['Space Grotesk', 'sans-serif'],
 				mono: ['SF Mono', 'monospace'],
 			},
 			backdropFilter: {

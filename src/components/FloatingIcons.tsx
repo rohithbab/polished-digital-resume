@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Code, Database, Server, Cpu, Monitor, Terminal, 
-  Hash, GitBranch, Cloud, AlertCircle, MousePointer, 
+  Hash, GitBranch, Cloud, BrainCircuit, MousePointer, 
   PenTool, Network, Share2, Shield, Zap } from 'lucide-react';
 
 interface Icon {
@@ -9,12 +9,13 @@ interface Icon {
   position: { top: string; left: string };
   size: number;
   animation: string;
+  rotation: string;
   opacity: number;
 }
 
 const techIcons = [
   Code, Database, Server, Cpu, Monitor, Terminal, 
-  Hash, GitBranch, Cloud, AlertCircle, MousePointer, 
+  Hash, GitBranch, Cloud, BrainCircuit, MousePointer, 
   PenTool, Network, Share2, Shield, Zap
 ];
 
@@ -22,24 +23,28 @@ const FloatingIcons = () => {
   const [icons, setIcons] = useState<Icon[]>([]);
   
   useEffect(() => {
-    const iconCount = Math.max(10, Math.min(16, Math.floor(window.innerWidth / 100)));
+    const iconCount = Math.max(12, Math.min(20, Math.floor(window.innerWidth / 80)));
     const generatedIcons: Icon[] = [];
     
     for (let i = 0; i < iconCount; i++) {
       const IconComponent = techIcons[i % techIcons.length];
+      const rotationDegree = Math.floor(Math.random() * 360);
+      
       generatedIcons.push({
-        component: <IconComponent />,
+        component: <IconComponent strokeWidth={1.5} />,
         position: {
           top: `${Math.random() * 90}%`,
           left: `${Math.random() * 95}%`,
         },
-        size: Math.floor(Math.random() * 16) + 14, // 14px - 30px
+        size: Math.floor(Math.random() * 20) + 16, // 16px - 36px
         animation: [
           'animate-float', 
-          'animate-float-slow', 
-          'animate-float-slower'
-        ][Math.floor(Math.random() * 3)],
-        opacity: Math.random() * 0.15 + 0.05, // 0.05 - 0.2
+          'animate-float-slow',
+          'animate-float-slower',
+          'animate-float-horizontal'
+        ][Math.floor(Math.random() * 4)],
+        rotation: `rotate-${rotationDegree}`,
+        opacity: Math.random() * 0.4 + 0.2, // 0.2 - 0.6
       });
     }
     
@@ -51,14 +56,19 @@ const FloatingIcons = () => {
       {icons.map((icon, index) => (
         <div
           key={index}
-          className={`absolute ${icon.animation}`}
+          className={`absolute ${icon.animation} ${index % 3 === 0 ? 'animate-pulse-glow' : ''}`}
           style={{
             top: icon.position.top,
             left: icon.position.left,
             opacity: icon.opacity,
+            transform: `rotate(${Math.random() * 360}deg)`,
+            transition: 'all 0.5s ease',
           }}
         >
-          <div className="text-primary dark:text-accent" style={{ width: icon.size, height: icon.size }}>
+          <div 
+            className={`text-primary dark:text-accent ${index % 5 === 0 ? 'animate-pulse-icon' : ''} ${index % 7 === 0 ? 'animate-rotate-slow' : ''}`} 
+            style={{ width: icon.size, height: icon.size }}
+          >
             {icon.component}
           </div>
         </div>
