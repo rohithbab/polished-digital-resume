@@ -10,3 +10,17 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* 3D transform styles */
+.rotate-y-12 {
+  transform: rotateY(12deg);
+}
+
+.-rotate-y-12 {
+  transform: rotateY(-12deg);
+}
+
+.translate-z-\[-100px\] {
+  transform: translateZ(-100px);
+}
+
