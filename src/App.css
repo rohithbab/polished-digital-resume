@@ -10,26 +10,3 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-
-/* 3D transform styles */
-.rotate-y-12 {
-  transform: rotateY(12deg);
-}
-
-.-rotate-y-12 {
-  transform: rotateY(-12deg);
-}
-
-.translate-z-\[-100px\] {
-  transform: translateZ(-100px);
-}
-
-/* Add perspective to the card container */
-.card-perspective {
-  perspective: 1500px;
-}
-
-/* Apply 3D space */
-.preserve-3d {
-  transform-style: preserve-3d;
-}
