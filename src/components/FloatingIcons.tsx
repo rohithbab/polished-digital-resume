@@ -10,7 +10,6 @@ interface Icon {
   component: React.ReactNode;
   position: { top: string; left: string };
   size: number;
-  animation: string;
   opacity: number;
   color: string;
   speed: number;
@@ -27,7 +26,7 @@ const FloatingIcons = () => {
   
   useEffect(() => {
     // Create more icons for a denser effect
-    const iconCount = Math.max(25, Math.min(40, Math.floor(window.innerWidth / 50)));
+    const iconCount = Math.max(40, Math.min(60, Math.floor(window.innerWidth / 40)));
     const generatedIcons: Icon[] = [];
     
     const colors = [
@@ -41,15 +40,13 @@ const FloatingIcons = () => {
       generatedIcons.push({
         component: <IconComponent strokeWidth={1.5} />,
         position: {
-          // Start icons from above the visible area for better falling effect
-          top: `${Math.random() * -50}%`,
-          left: `${Math.random() * 98}%`,
+          top: `${Math.random() * -100}%`, // Start further above viewport
+          left: `${Math.random() * 100}%`,
         },
-        size: Math.floor(Math.random() * 24) + 16, // 16px - 40px
-        animation: `falling-${Math.floor(Math.random() * 4) + 1}`,
-        opacity: Math.random() * 0.4 + 0.4, // 0.4 - 0.8 (more visible)
+        size: Math.floor(Math.random() * 28) + 18, // 18px - 46px (larger)
+        opacity: Math.random() * 0.5 + 0.5, // 0.5 - 1.0 (more visible)
         color: colors[Math.floor(Math.random() * colors.length)],
-        speed: Math.random() * 20 + 10 // 10s - 30s falling duration
+        speed: Math.random() * 25 + 15 // 15s - 40s falling duration
       });
     }
     
@@ -60,13 +57,18 @@ const FloatingIcons = () => {
       setIcons(prev => {
         return prev.map(icon => {
           // If icon has fallen below the view, reset it to the top
-          if (parseFloat(icon.position.top) > 100) {
+          if (parseFloat(icon.position.top) > 110) {
             return {
               ...icon,
               position: {
-                top: `${Math.random() * -20}%`, // Start slightly above the viewport
-                left: `${Math.random() * 98}%`,
-              }
+                top: `${Math.random() * -50}%`, // Start well above the viewport
+                left: `${Math.random() * 100}%`,
+              },
+              // Randomize the appearance for variety
+              size: Math.floor(Math.random() * 28) + 18,
+              opacity: Math.random() * 0.5 + 0.5,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              speed: Math.random() * 25 + 15
             };
           }
           
@@ -75,7 +77,7 @@ const FloatingIcons = () => {
             ...icon,
             position: {
               ...icon.position,
-              top: `${parseFloat(icon.position.top) + 0.2}%`,
+              top: `${parseFloat(icon.position.top) + 0.4}%`, // Faster movement
             }
           };
         });
@@ -90,14 +92,14 @@ const FloatingIcons = () => {
       {icons.map((icon, index) => (
         <div
           key={index}
-          className={`absolute transition-all`}
+          className={`absolute ${index % 2 === 0 ? 'animate-fallDown' : 'animate-fallDownWiggle'}`}
           style={{
             top: icon.position.top,
             left: icon.position.left,
             opacity: icon.opacity,
-            animation: `fallDown ${icon.speed}s linear infinite`,
-            filter: 'drop-shadow(0 0 8px currentColor)',
-            transition: 'all 0.5s ease',
+            animationDuration: `${icon.speed}s`,
+            filter: 'drop-shadow(0 0 10px currentColor)',
+            zIndex: -5
           }}
         >
           <div 
@@ -105,7 +107,7 @@ const FloatingIcons = () => {
             style={{ 
               width: icon.size, 
               height: icon.size,
-              filter: 'drop-shadow(0 0 5px currentColor)',
+              filter: 'drop-shadow(0 0 8px currentColor)',
             }}
           >
             {icon.component}
