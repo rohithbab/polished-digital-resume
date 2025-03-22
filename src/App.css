@@ -10,3 +10,26 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Add falling animation for background icons */
+@keyframes fallDown {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(110vh) rotate(360deg);
+  }
+}
+
+/* Add slight side-to-side movement while falling */
+@keyframes fallDownWiggle {
+  0% {
+    transform: translateY(-10vh) translateX(-5px);
+  }
+  50% {
+    transform: translateY(50vh) translateX(5px);
+  }
+  100% {
+    transform: translateY(110vh) translateX(-5px);
+  }
+}

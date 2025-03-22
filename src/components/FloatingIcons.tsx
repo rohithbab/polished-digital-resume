@@ -1,61 +1,88 @@
 
 import { useEffect, useState } from 'react';
-import { Code, Database, Server, Cpu, Monitor, Terminal, 
+import { 
+  Code, Database, Server, Cpu, Monitor, Terminal, 
   Hash, GitBranch, Cloud, BrainCircuit, MousePointer, 
-  PenTool, Network, Share2, Shield, Zap } from 'lucide-react';
+  PenTool, Network, Share2, Shield, Zap, Star, Sparkle
+} from 'lucide-react';
 
 interface Icon {
   component: React.ReactNode;
   position: { top: string; left: string };
   size: number;
   animation: string;
-  rotation: string;
   opacity: number;
   color: string;
+  speed: number;
 }
 
 const techIcons = [
   Code, Database, Server, Cpu, Monitor, Terminal, 
   Hash, GitBranch, Cloud, BrainCircuit, MousePointer, 
-  PenTool, Network, Share2, Shield, Zap
+  PenTool, Network, Share2, Shield, Zap, Star, Sparkle
 ];
 
 const FloatingIcons = () => {
   const [icons, setIcons] = useState<Icon[]>([]);
   
   useEffect(() => {
-    const iconCount = Math.max(15, Math.min(25, Math.floor(window.innerWidth / 70)));
+    // Create more icons for a denser effect
+    const iconCount = Math.max(25, Math.min(40, Math.floor(window.innerWidth / 50)));
     const generatedIcons: Icon[] = [];
     
     const colors = [
       'text-primary', 'text-accent', 'text-blue-400', 'text-purple-400', 
-      'text-indigo-400', 'text-violet-400'
+      'text-indigo-400', 'text-violet-400', 'text-cyan-400'
     ];
     
     for (let i = 0; i < iconCount; i++) {
       const IconComponent = techIcons[i % techIcons.length];
-      const rotationDegree = Math.floor(Math.random() * 360);
       
       generatedIcons.push({
         component: <IconComponent strokeWidth={1.5} />,
         position: {
-          top: `${Math.random() * 95}%`,
-          left: `${Math.random() * 95}%`,
+          // Start icons from above the visible area for better falling effect
+          top: `${Math.random() * -50}%`,
+          left: `${Math.random() * 98}%`,
         },
-        size: Math.floor(Math.random() * 24) + 20, // 20px - 44px (bigger size)
-        animation: [
-          'animate-float', 
-          'animate-float-slow',
-          'animate-float-slower',
-          'animate-float-horizontal'
-        ][Math.floor(Math.random() * 4)],
-        rotation: `rotate-${rotationDegree}`,
-        opacity: Math.random() * 0.5 + 0.3, // 0.3 - 0.8 (more visible)
-        color: colors[Math.floor(Math.random() * colors.length)]
+        size: Math.floor(Math.random() * 24) + 16, // 16px - 40px
+        animation: `falling-${Math.floor(Math.random() * 4) + 1}`,
+        opacity: Math.random() * 0.4 + 0.4, // 0.4 - 0.8 (more visible)
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speed: Math.random() * 20 + 10 // 10s - 30s falling duration
       });
     }
     
     setIcons(generatedIcons);
+
+    // Create a continuous effect of falling icons
+    const interval = setInterval(() => {
+      setIcons(prev => {
+        return prev.map(icon => {
+          // If icon has fallen below the view, reset it to the top
+          if (parseFloat(icon.position.top) > 100) {
+            return {
+              ...icon,
+              position: {
+                top: `${Math.random() * -20}%`, // Start slightly above the viewport
+                left: `${Math.random() * 98}%`,
+              }
+            };
+          }
+          
+          // Move the icon down
+          return {
+            ...icon,
+            position: {
+              ...icon.position,
+              top: `${parseFloat(icon.position.top) + 0.2}%`,
+            }
+          };
+        });
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -63,14 +90,14 @@ const FloatingIcons = () => {
       {icons.map((icon, index) => (
         <div
           key={index}
-          className={`absolute ${icon.animation} ${index % 3 === 0 ? 'animate-pulse-glow' : ''}`}
+          className={`absolute transition-all`}
           style={{
             top: icon.position.top,
             left: icon.position.left,
             opacity: icon.opacity,
-            transform: `rotate(${Math.random() * 360}deg)`,
-            transition: 'all 0.5s ease',
+            animation: `fallDown ${icon.speed}s linear infinite`,
             filter: 'drop-shadow(0 0 8px currentColor)',
+            transition: 'all 0.5s ease',
           }}
         >
           <div 
