@@ -1,7 +1,7 @@
 import React from 'react';
 import { ExternalLink, Github, Edit, Trash } from 'lucide-react';
 
-const ProjectCard = () => {
+const ProjectCard = ({ demoUrl = '#', codeUrl = '#', onEdit, onDelete }) => {
   return (
     <div className="project-card flex flex-col h-full animate-fade-in">
       <div className="relative w-full h-48 mb-4 overflow-hidden rounded-lg">
@@ -16,7 +16,7 @@ const ProjectCard = () => {
       <div className="mt-auto flex justify-between items-center">
         <div className="flex space-x-3">
           <a 
-            href="/demo-link" 
+            href={demoUrl} 
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors"
@@ -25,7 +25,7 @@ const ProjectCard = () => {
             <ExternalLink className="h-4 w-4" />
           </a>
           <a 
-            href="/github-link" 
+            href={codeUrl} 
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors"
@@ -33,10 +33,18 @@ const ProjectCard = () => {
           >
             <Github className="h-4 w-4" />
           </a>
-          <button className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" aria-label="Edit Project">
+          <button 
+            onClick={onEdit}
+            className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+            aria-label="Edit Project"
+          >
             <Edit className="h-4 w-4" />
           </button>
-          <button className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" aria-label="Delete Project">
+          <button 
+            onClick={onDelete}
+            className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+            aria-label="Delete Project"
+          >
             <Trash className="h-4 w-4" />
           </button>
         </div>
