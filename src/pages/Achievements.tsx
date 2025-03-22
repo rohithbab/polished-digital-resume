@@ -42,6 +42,11 @@ const Achievements = () => {
     setIsAddDialogOpen(true);
   };
 
+  const openAddDialog = () => {
+    setEditingAchievement(null);
+    setIsAddDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 dark:from-background dark:to-secondary/10 px-4 py-20">
       <div className="max-w-7xl mx-auto">
@@ -55,20 +60,22 @@ const Achievements = () => {
             <h1 className="text-4xl font-bold">My Achievements</h1>
             <p className="text-muted-foreground mt-2">A collection of my accomplishments and recognitions</p>
           </div>
-          <Button 
-            onClick={() => {
-              setEditingAchievement(null);
-              setIsAddDialogOpen(true);
-            }}
-            className="mt-4 md:mt-0"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Achievement
-          </Button>
         </div>
 
         {/* Achievements Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          {/* Always present "Add New Achievement" card */}
+          <Card className="flex flex-col h-full bg-primary/5 border-dashed border-primary/30 hover:bg-primary/10 transition-colors cursor-pointer" onClick={openAddDialog}>
+            <div className="flex flex-col items-center justify-center h-full py-12">
+              <div className="rounded-full bg-primary/20 p-4 mb-4">
+                <Plus className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-medium text-center">New Achievement</h3>
+              <p className="text-muted-foreground text-center mt-2">Click to add a new achievement</p>
+            </div>
+          </Card>
+          
+          {/* Display existing achievements */}
           {achievements.map((achievement) => (
             <Card key={achievement.id} className="flex flex-col h-full">
               <CardHeader>
@@ -114,7 +121,10 @@ const Achievements = () => {
                 )}
                 <Button 
                   variant="secondary"
-                  onClick={() => handleEditAchievement(achievement)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditAchievement(achievement);
+                  }}
                 >
                   <Pen className="h-4 w-4" />
                 </Button>
