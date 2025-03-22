@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Pen, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Plus, Pen, ExternalLink, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { achievements as initialAchievements } from '@/lib/achievements';
@@ -42,6 +42,14 @@ const Achievements = () => {
     setIsAddDialogOpen(true);
   };
 
+  const handleDeleteAchievement = (achievementId: string) => {
+    setAchievements(prev => prev.filter(achievement => achievement.id !== achievementId));
+    toast({
+      title: "Achievement deleted",
+      description: "Your achievement has been deleted successfully.",
+    });
+  };
+
   const openAddDialog = () => {
     setEditingAchievement(null);
     setIsAddDialogOpen(true);
@@ -77,7 +85,15 @@ const Achievements = () => {
           
           {/* Display existing achievements */}
           {achievements.map((achievement) => (
-            <Card key={achievement.id} className="flex flex-col h-full">
+            <Card key={achievement.id} className="flex flex-col h-full relative">
+              <button
+                onClick={() => handleDeleteAchievement(achievement.id)}
+                className="absolute top-3 right-3 z-10 p-1.5 bg-destructive/90 text-white rounded-full hover:bg-destructive transition-colors"
+                aria-label="Delete Achievement"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+              
               <CardHeader>
                 <div className="relative w-full h-48 -mt-1 -mx-1 overflow-hidden rounded-t-lg">
                   <img 

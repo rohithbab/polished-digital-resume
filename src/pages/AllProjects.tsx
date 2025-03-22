@@ -1,15 +1,22 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Github, Search } from 'lucide-react';
-import { projects } from '../lib/projects';
+import { ArrowLeft, ExternalLink, Github, Search, Plus, Trash2 } from 'lucide-react';
+import { projects as initialProjects } from '../lib/projects';
 import Navbar from '../components/Navbar';
 import FloatingIcons from '../components/FloatingIcons';
+import { useToast } from '@/hooks/use-toast';
+import AddProjectDialog from '@/components/AddProjectDialog';
+import { Project } from '@/lib/projects';
 
 const AllProjects = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [filteredProjects, setFilteredProjects] = useState(initialProjects);
   const [selectedTech, setSelectedTech] = useState<string | null>(null);
+  const [projects, setProjects] = useState(initialProjects);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const { toast } = useToast();
   
   // Extract all unique technologies
   const allTechnologies = Array.from(
@@ -38,10 +45,50 @@ const AllProjects = () => {
     }
     
     setFilteredProjects(result);
-  }, [searchTerm, selectedTech]);
+  }, [searchTerm, selectedTech, projects]);
   
   const handleTechFilter = (tech: string) => {
     setSelectedTech(prev => prev === tech ? null : tech);
+  };
+
+  const handleSaveProject = (project: Project) => {
+    if (editingProject) {
+      // Update existing project
+      setProjects(prev => 
+        prev.map(p => p.id === project.id ? project : p)
+      );
+      toast({
+        title: "Project updated",
+        description: "Your project has been updated successfully.",
+      });
+    } else {
+      // Add new project
+      setProjects(prev => [...prev, project]);
+      toast({
+        title: "Project added",
+        description: "Your new project has been added successfully.",
+      });
+    }
+    setIsAddDialogOpen(false);
+    setEditingProject(null);
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    setProjects(prev => prev.filter(project => project.id !== projectId));
+    toast({
+      title: "Project deleted",
+      description: "Your project has been deleted successfully.",
+    });
+  };
+
+  const openAddDialog = () => {
+    setEditingProject(null);
+    setIsAddDialogOpen(true);
   };
   
   return (
@@ -96,7 +143,7 @@ const AllProjects = () => {
             </div>
           </div>
           
-          {filteredProjects.length === 0 ? (
+          {filteredProjects.length === 0 && !selectedTech && searchTerm === '' ? (
             <div className="text-center py-12 animate-fade-in">
               <p className="text-xl text-muted-foreground">No projects match your search criteria.</p>
               <button
@@ -111,12 +158,34 @@ const AllProjects = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Always present "Add New Project" card */}
+              <div 
+                className="project-card flex flex-col h-full animate-fade-in bg-primary/5 border-dashed border-primary/30 hover:bg-primary/10 transition-colors cursor-pointer rounded-lg"
+                onClick={openAddDialog}
+              >
+                <div className="flex flex-col items-center justify-center h-full py-12">
+                  <div className="rounded-full bg-primary/20 p-4 mb-4">
+                    <Plus className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-medium text-center">New Project</h3>
+                  <p className="text-muted-foreground text-center mt-2">Click to add a new project</p>
+                </div>
+              </div>
+
               {filteredProjects.map((project, index) => (
                 <div 
                   key={project.id}
-                  className="project-card flex flex-col h-full animate-fade-in"
+                  className="project-card flex flex-col h-full animate-fade-in relative"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
+                  <button
+                    onClick={() => handleDeleteProject(project.id)}
+                    className="absolute top-2 right-2 z-10 p-1.5 bg-destructive/90 text-white rounded-full hover:bg-destructive transition-colors"
+                    aria-label="Delete Project"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                  
                   <div className="relative w-full h-48 mb-4 overflow-hidden rounded-lg">
                     <img 
                       src={project.image} 
@@ -171,6 +240,16 @@ const AllProjects = () => {
                           <Github className="h-4 w-4" />
                         </a>
                       )}
+                      <button
+                        className="btn-secondary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditProject(project);
+                        }}
+                        aria-label="Edit Project"
+                      >
+                        <Pen className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -179,6 +258,13 @@ const AllProjects = () => {
           )}
         </div>
       </main>
+
+      <AddProjectDialog 
+        open={isAddDialogOpen} 
+        onOpenChange={setIsAddDialogOpen}
+        onSave={handleSaveProject}
+        project={editingProject}
+      />
     </div>
   );
 };
