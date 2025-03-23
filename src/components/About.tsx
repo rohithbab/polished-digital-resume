@@ -1,25 +1,39 @@
-
 import { useState } from 'react';
 import { 
   BookOpen, GraduationCap, HeartPulse, 
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Edit, X, Save
 } from 'lucide-react';
 
 interface AboutCardProps {
   title: string;
   icon: React.ReactNode;
-  children: React.ReactNode;
+  content: string;
   isActive: boolean;
+  onEdit: () => void;
 }
 
-const AboutCard = ({ title, icon, children, isActive }: AboutCardProps) => {
+interface AboutCardData {
+  title: string;
+  icon: React.ReactNode;
+  content: string;
+}
+
+const AboutCard = ({ title, icon, content, isActive, onEdit }: AboutCardProps) => {
   return (
     <div 
       className={`w-full max-w-md transition-all duration-500 ease-in-out ${
         isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute'
       }`}
     >
-      <div className="p-8 bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg">
+      <div className="p-8 bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg relative">
+        <button 
+          onClick={onEdit}
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors"
+          aria-label="Edit content"
+        >
+          <Edit className="h-5 w-5" />
+        </button>
+        
         <div className="flex items-center mb-6">
           <div className="bg-primary/10 dark:bg-accent/10 p-3 rounded-md mr-4">
             {icon}
@@ -27,7 +41,67 @@ const AboutCard = ({ title, icon, children, isActive }: AboutCardProps) => {
           <h3 className="text-2xl font-bold">{title}</h3>
         </div>
         <div className="min-h-[230px] text-lg">
-          {children}
+          {content ? (
+            <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
+          ) : (
+            <div className="flex justify-center items-center h-full text-muted-foreground">
+              <p>Click the edit button to add content</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditModal = ({ isOpen, onClose, title, content, onSave }: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  content: string;
+  onSave: (content: string) => void;
+}) => {
+  const [editedContent, setEditedContent] = useState(content);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
+      <div className="bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+        <div className="p-4 border-b flex justify-between items-center">
+          <h3 className="text-xl font-bold">Edit {title}</h3>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-secondary/80 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="p-4 flex-grow overflow-auto">
+          <textarea
+            value={editedContent}
+            onChange={(e) => setEditedContent(e.target.value)}
+            className="w-full h-64 p-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Enter content here..."
+          />
+        </div>
+        <div className="p-4 border-t flex justify-end gap-2">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 rounded-md border hover:bg-secondary/20 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={() => {
+              onSave(editedContent);
+              onClose();
+            }}
+            className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Save Changes
+          </button>
         </div>
       </div>
     </div>
@@ -36,55 +110,28 @@ const AboutCard = ({ title, icon, children, isActive }: AboutCardProps) => {
 
 const About = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   
-  const cards = [
+  const defaultCards: AboutCardData[] = [
     {
       title: "About Me",
       icon: <BookOpen className="h-7 w-7" />,
-      content: (
-        <div>
-          <p className="mb-5 text-lg">
-            I'm a passionate Data Analyst with expertise in transforming complex datasets into actionable insights. 
-            With a strong foundation in statistical analysis and data visualization, I help organizations make data-driven decisions.
-          </p>
-          <p className="text-lg">
-            My approach combines technical expertise with business acumen to deliver meaningful results that drive growth and efficiency.
-          </p>
-        </div>
-      )
+      content: ""
     },
     {
       title: "Education",
       icon: <GraduationCap className="h-7 w-7" />,
-      content: (
-        <div className="space-y-5">
-          <div>
-            <h4 className="font-bold text-xl">Master of Data Science</h4>
-            <p className="text-muted-foreground text-lg">University of Data Analytics, 2019-2021</p>
-          </div>
-          <div>
-            <h4 className="font-bold text-xl">Bachelor of Computer Science</h4>
-            <p className="text-muted-foreground text-lg">Tech Institute of Computer Science, 2015-2019</p>
-          </div>
-        </div>
-      )
+      content: ""
     },
     {
       title: "Hobbies",
       icon: <HeartPulse className="h-7 w-7" />,
-      content: (
-        <div className="space-y-4">
-          <p className="text-lg">When I'm not analyzing data, you can find me:</p>
-          <ul className="list-disc list-inside space-y-2 text-lg">
-            <li>Reading books on emerging technologies</li>
-            <li>Playing chess and strategic board games</li>
-            <li>Hiking and exploring nature trails</li>
-            <li>Contributing to open-source data projects</li>
-          </ul>
-        </div>
-      )
+      content: ""
     }
   ];
+
+  const [cards, setCards] = useState<AboutCardData[]>(defaultCards);
 
   const prevCard = () => {
     setActiveIndex((prev) => (prev - 1 + cards.length) % cards.length);
@@ -92,6 +139,22 @@ const About = () => {
 
   const nextCard = () => {
     setActiveIndex((prev) => (prev + 1) % cards.length);
+  };
+
+  const handleEditClick = (index: number) => {
+    setEditingIndex(index);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveContent = (content: string) => {
+    if (editingIndex !== null) {
+      const updatedCards = [...cards];
+      updatedCards[editingIndex] = {
+        ...updatedCards[editingIndex],
+        content
+      };
+      setCards(updatedCards);
+    }
   };
 
   return (
@@ -112,10 +175,10 @@ const About = () => {
                 key={index}
                 title={card.title} 
                 icon={card.icon}
+                content={card.content}
                 isActive={index === activeIndex}
-              >
-                {card.content}
-              </AboutCard>
+                onEdit={() => handleEditClick(index)}
+              />
             ))}
           </div>
 
@@ -138,6 +201,15 @@ const About = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <EditModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title={editingIndex !== null ? cards[editingIndex].title : ""}
+        content={editingIndex !== null ? cards[editingIndex].content : ""}
+        onSave={handleSaveContent}
+      />
     </section>
   );
 };
