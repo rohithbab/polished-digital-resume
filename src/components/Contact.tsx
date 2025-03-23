@@ -1,6 +1,13 @@
-
 import { useState } from 'react';
-import { Send, Instagram, Linkedin, MessageSquare } from 'lucide-react';
+import { Send, Instagram, Linkedin, MessageSquare, Edit, Save, X } from 'lucide-react';
+
+interface SocialLink {
+  platform: string;
+  icon: React.ReactNode;
+  url: string;
+  username: string;
+  placeholder: string;
+}
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +18,34 @@ const Contact = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [editingSocial, setEditingSocial] = useState<string | null>(null);
+  
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
+    {
+      platform: 'Instagram',
+      icon: <Instagram className="h-6 w-6 text-primary dark:text-accent" />,
+      url: '',
+      username: '@username',
+      placeholder: 'https://instagram.com/username'
+    },
+    {
+      platform: 'LinkedIn',
+      icon: <Linkedin className="h-6 w-6 text-primary dark:text-accent" />,
+      url: '',
+      username: 'linkedin.com/in/username',
+      placeholder: 'https://linkedin.com/in/username'
+    },
+    {
+      platform: 'WhatsApp',
+      icon: <MessageSquare className="h-6 w-6 text-primary dark:text-accent" />,
+      url: '',
+      username: '+1 (234) 567-890',
+      placeholder: 'https://wa.me/1234567890'
+    }
+  ]);
+  
+  const [tempUrl, setTempUrl] = useState('');
+  const [tempUsername, setTempUsername] = useState('');
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -32,6 +67,25 @@ const Contact = () => {
         setSubmitMessage('');
       }, 5000);
     }, 1500);
+  };
+
+  const startEditing = (platform: string, url: string, username: string) => {
+    setEditingSocial(platform);
+    setTempUrl(url);
+    setTempUsername(username);
+  };
+
+  const cancelEditing = () => {
+    setEditingSocial(null);
+  };
+
+  const saveSocialLink = (platform: string) => {
+    setSocialLinks(prev => prev.map(link => 
+      link.platform === platform 
+        ? { ...link, url: tempUrl, username: tempUsername } 
+        : link
+    ));
+    setEditingSocial(null);
   };
   
   return (
@@ -129,50 +183,84 @@ const Contact = () => {
               </p>
               
               <div className="space-y-6">
-                <a 
-                  href="https://instagram.com/username" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center p-4 rounded-lg hover:bg-secondary/50 dark:hover:bg-secondary/30 transition-colors"
-                >
-                  <div className="p-2 bg-primary/10 dark:bg-accent/10 rounded-md mr-4">
-                    <Instagram className="h-6 w-6 text-primary dark:text-accent" />
+                {socialLinks.map((social) => (
+                  <div key={social.platform} className="relative">
+                    {editingSocial === social.platform ? (
+                      <div className="p-4 rounded-lg bg-secondary/20 dark:bg-secondary/40">
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium mb-1">URL</label>
+                          <input
+                            type="text"
+                            value={tempUrl}
+                            onChange={(e) => setTempUrl(e.target.value)}
+                            placeholder={social.placeholder}
+                            className="w-full px-3 py-1.5 rounded-md border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-accent/50"
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium mb-1">Display Text</label>
+                          <input
+                            type="text"
+                            value={tempUsername}
+                            onChange={(e) => setTempUsername(e.target.value)}
+                            placeholder={social.username}
+                            className="w-full px-3 py-1.5 rounded-md border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-accent/50"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={cancelEditing}
+                            className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => saveSocialLink(social.platform)}
+                            className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                          >
+                            <Save className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEditing(social.platform, social.url, social.username)}
+                          className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors z-10"
+                          aria-label={`Edit ${social.platform} link`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        {social.url ? (
+                          <a 
+                            href={social.url} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center p-4 rounded-lg hover:bg-secondary/50 dark:hover:bg-secondary/30 transition-colors"
+                          >
+                            <div className="p-2 bg-primary/10 dark:bg-accent/10 rounded-md mr-4">
+                              {social.icon}
+                            </div>
+                            <div>
+                              <h4 className="font-bold">{social.platform}</h4>
+                              <p className="text-sm text-muted-foreground">{social.username}</p>
+                            </div>
+                          </a>
+                        ) : (
+                          <div className="flex items-center p-4 rounded-lg cursor-default">
+                            <div className="p-2 bg-primary/10 dark:bg-accent/10 rounded-md mr-4">
+                              {social.icon}
+                            </div>
+                            <div>
+                              <h4 className="font-bold">{social.platform}</h4>
+                              <p className="text-sm text-muted-foreground">No link added yet</p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
-                  <div>
-                    <h4 className="font-bold">Instagram</h4>
-                    <p className="text-sm text-muted-foreground">@username</p>
-                  </div>
-                </a>
-                
-                <a 
-                  href="https://linkedin.com/in/username" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center p-4 rounded-lg hover:bg-secondary/50 dark:hover:bg-secondary/30 transition-colors"
-                >
-                  <div className="p-2 bg-primary/10 dark:bg-accent/10 rounded-md mr-4">
-                    <Linkedin className="h-6 w-6 text-primary dark:text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold">LinkedIn</h4>
-                    <p className="text-sm text-muted-foreground">linkedin.com/in/username</p>
-                  </div>
-                </a>
-                
-                <a 
-                  href="https://wa.me/1234567890" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center p-4 rounded-lg hover:bg-secondary/50 dark:hover:bg-secondary/30 transition-colors"
-                >
-                  <div className="p-2 bg-primary/10 dark:bg-accent/10 rounded-md mr-4">
-                    <MessageSquare className="h-6 w-6 text-primary dark:text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold">WhatsApp</h4>
-                    <p className="text-sm text-muted-foreground">+1 (234) 567-890</p>
-                  </div>
-                </a>
+                ))}
               </div>
             </div>
           </div>
