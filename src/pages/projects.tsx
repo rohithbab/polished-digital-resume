@@ -1,21 +1,40 @@
 import React, { useState } from 'react';
 import ProjectCard from '../components/ProjectCard';
 import { Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import AddProjectDialog, { Project } from '../components/AddProjectDialog';
 
 const ProjectsPage = () => {
-  const handleEdit = () => {
-    // Logic to edit project details
-    console.log('Edit project');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  const handleEdit = (project: Project) => {
+    setEditingProject(project);
+    setIsAddDialogOpen(true);
   };
 
-  const handleDelete = () => {
-    // Logic to delete project
-    console.log('Delete project');
+  const handleDelete = (projectId: string) => {
+    setProjects(prev => prev.filter(project => project.id !== projectId));
   };
 
   const handleAddNewProject = () => {
-    // Logic to add new project
-    console.log('Add new project');
+    setEditingProject(null);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleSaveProject = (project: Project) => {
+    if (editingProject) {
+      // Update existing project
+      setProjects(prev => 
+        prev.map(p => p.id === project.id ? project : p)
+      );
+    } else {
+      // Add new project
+      setProjects(prev => [...prev, project]);
+    }
+    setIsAddDialogOpen(false);
+    setEditingProject(null);
   };
 
   return (
@@ -35,18 +54,34 @@ const ProjectsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          {/* Placeholder for Project Cards */}
-          {[...Array(6)].map((_, index) => (
-            <ProjectCard key={index} onEdit={handleEdit} onDelete={handleDelete} />
+          {/* Display existing projects */}
+          {projects.map((project, index) => (
+            <ProjectCard 
+              key={project.id} 
+              project={project}
+              onEdit={() => handleEdit(project)} 
+              onDelete={() => handleDelete(project.id)} 
+            />
           ))}
+          
+          {/* Add new project card */}
           <div 
-            className="project-card flex items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer"
+            className="project-card flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
             onClick={handleAddNewProject}
           >
-            <span className="text-primary dark:text-accent font-bold text-2xl">+</span>
+            <Plus className="h-8 w-8 text-primary mb-2" />
+            <span className="text-primary dark:text-accent font-medium">Add Project</span>
           </div>
         </div>
       </div>
+
+      {/* Project Dialog for adding/editing */}
+      <AddProjectDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSave={handleSaveProject}
+        project={editingProject}
+      />
     </section>
   );
 };

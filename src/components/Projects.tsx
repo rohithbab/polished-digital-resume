@@ -14,10 +14,8 @@ const Projects = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          {[...Array(3)].map((_, index) => (
-            <ProjectCard key={index} />
-          ))}
+        <div className="text-center py-12 animate-fade-in">
+          <p className="text-muted-foreground">No projects added yet. Click below to add your first project.</p>
         </div>
         
         <div className="flex justify-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
