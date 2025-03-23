@@ -112,12 +112,22 @@ const EditModal = ({ isOpen, onClose, title, content, onSave }: {
   );
 };
 
+// Add this debug function at the file level, outside any component
+const debugLog = (message, data = null) => {
+  const log = data ? `DEBUG: ${message} ${JSON.stringify(data, null, 2)}` : `DEBUG: ${message}`;
+  console.log(log);
+  return log;
+};
+
 const About = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Add debug flag for more verbose logging
+  const DEBUG = true;
+
   const defaultCards: AboutCardData[] = [
     {
       title: "About Me",
@@ -143,13 +153,21 @@ const About = () => {
     const fetchAboutData = async () => {
       try {
         setIsLoading(true);
+        DEBUG && debugLog('Fetching data from Firebase...');
         
         // Fetch about data
+        DEBUG && debugLog('Fetching about data...');
         const aboutData = await getAllAbout();
+        DEBUG && debugLog('About data received:', aboutData);
+        
         let aboutMe = aboutData.find(item => item.title === "About Me");
+        DEBUG && debugLog('About Me data:', aboutMe);
         
         // Fetch education data and format it
+        DEBUG && debugLog('Fetching education data...');
         const educationData = await getAllEducation();
+        DEBUG && debugLog('Education data received:', educationData);
+        
         let educationContent = "";
         if (educationData.length > 0) {
           educationContent = educationData.map(edu => 
@@ -158,15 +176,20 @@ const About = () => {
             `${edu.startDate} - ${edu.endDate}<br>` +
             `${edu.description || ""}`
           ).join("<br><br>");
+          DEBUG && debugLog('Formatted education content created');
         }
         
         // Fetch hobbies data and format it
+        DEBUG && debugLog('Fetching hobbies data...');
         const hobbiesData = await getAllHobbies();
+        DEBUG && debugLog('Hobbies data received:', hobbiesData);
+        
         let hobbiesContent = "";
         if (hobbiesData.length > 0) {
           hobbiesContent = hobbiesData.map(hobby => 
             `<strong>${hobby.name}</strong><br>${hobby.description}`
           ).join("<br><br>");
+          DEBUG && debugLog('Formatted hobbies content created');
         }
         
         // Update cards with fetched data
@@ -178,6 +201,9 @@ const About = () => {
             id: aboutMe.id,
             content: aboutMe.bio || ""
           };
+          DEBUG && debugLog('About Me card updated with Firebase data');
+        } else {
+          DEBUG && debugLog('No About Me data found in Firebase');
         }
         
         if (educationContent) {
@@ -185,6 +211,7 @@ const About = () => {
             ...updatedCards[1],
             content: educationContent
           };
+          DEBUG && debugLog('Education card updated with Firebase data');
         }
         
         if (hobbiesContent) {
@@ -192,13 +219,17 @@ const About = () => {
             ...updatedCards[2],
             content: hobbiesContent
           };
+          DEBUG && debugLog('Hobbies card updated with Firebase data');
         }
         
         setCards(updatedCards);
+        DEBUG && debugLog('All cards updated with Firebase data', updatedCards);
       } catch (error) {
         console.error("Error fetching about data:", error);
+        debugLog('ERROR fetching data:', error);
       } finally {
         setIsLoading(false);
+        DEBUG && debugLog('Loading state completed');
       }
     };
     
@@ -222,6 +253,10 @@ const About = () => {
     if (editingIndex === null) return;
     
     try {
+      DEBUG && debugLog('Starting save operation...');
+      DEBUG && debugLog('Content to save:', content);
+      DEBUG && debugLog('Editing index:', editingIndex);
+      
       const updatedCards = [...cards];
       updatedCards[editingIndex] = {
         ...updatedCards[editingIndex],
@@ -231,21 +266,55 @@ const About = () => {
       // Save to Firebase based on which card is being edited
       if (editingIndex === 0) {
         // About Me
+        DEBUG && debugLog('Saving About Me content...');
+        
+        // Check Firebase connection before attempting save
+        DEBUG && debugLog('Checking Firebase connection...');
+        try {
+          const testGet = await getAllAbout();
+          DEBUG && debugLog('Firebase connection test successful', testGet);
+        } catch (connectionError) {
+          console.error("Firebase connection test failed:", connectionError);
+          debugLog('ERROR in Firebase connection test:', connectionError);
+          alert("Failed to connect to Firebase. Check console for details.");
+          return;
+        }
+        
         const aboutData = {
           title: "About Me",
           bio: content,
           headline: "Data Analyst", // Default values
-          email: "",
-          location: ""
+          email: "example@example.com", // Required field
+          location: "Your Location" // Required field
         };
+        
+        DEBUG && debugLog('About data prepared for save:', aboutData);
         
         if (updatedCards[0].id) {
           // Update existing record
-          await updateAbout(updatedCards[0].id, { bio: content });
+          DEBUG && debugLog('Updating existing record with ID:', updatedCards[0].id);
+          try {
+            await updateAbout(updatedCards[0].id, { bio: content });
+            DEBUG && debugLog('Update operation completed successfully');
+          } catch (updateError) {
+            console.error("Error updating about data:", updateError);
+            debugLog('ERROR updating about data:', updateError);
+            alert("Failed to update. Check console for details.");
+            return;
+          }
         } else {
           // Add new record
-          const newId = await addAbout(aboutData);
-          updatedCards[0].id = newId;
+          DEBUG && debugLog('Creating new About Me record...');
+          try {
+            const newId = await addAbout(aboutData);
+            DEBUG && debugLog('New record created with ID:', newId);
+            updatedCards[0].id = newId;
+          } catch (addError) {
+            console.error("Error adding about data:", addError);
+            debugLog('ERROR adding about data:', addError);
+            alert("Failed to add new record. Check console for details.");
+            return;
+          }
         }
       }
       
@@ -253,9 +322,12 @@ const About = () => {
       // A more complete implementation would use dedicated forms for each education/hobby item
       
       setCards(updatedCards);
+      DEBUG && debugLog('Cards state updated successfully', updatedCards);
+      alert('Content saved successfully!');
     } catch (error) {
       console.error("Error saving content:", error);
-      alert("Failed to save. Please try again.");
+      debugLog('ERROR in save operation:', error);
+      alert(`Failed to save. Error: ${error.message}`);
     }
   };
 

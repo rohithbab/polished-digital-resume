@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -11,6 +10,11 @@ const navLinks = [
   { name: 'Skills', href: '#skills' },
   { name: 'Achievements', href: '#achievements' },
   { name: 'Contact', href: '#contact' },
+];
+
+// Regular page links that don't use hash navigation
+const pageLinks = [
+  { name: 'Firebase Test', href: '/firebase-test' }
 ];
 
 const Navbar = () => {
@@ -58,6 +62,16 @@ const Navbar = () => {
                 {link.name}
               </a>
             ))}
+            
+            {pageLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.href}
+                className="text-sm font-medium transition-colors hover:text-primary dark:hover:text-accent"
+              >
+                {link.name}
+              </Link>
+            ))}
           </div>
           <ThemeToggle />
         </div>
@@ -93,6 +107,17 @@ const Navbar = () => {
               >
                 {link.name}
               </a>
+            ))}
+            
+            {pageLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.href}
+                onClick={closeMenu}
+                className="py-3 text-base font-medium border-b border-border hover:text-primary dark:hover:text-accent transition-colors"
+              >
+                {link.name}
+              </Link>
             ))}
           </div>
         </div>
