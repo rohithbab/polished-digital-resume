@@ -3,7 +3,7 @@ import {
   BookOpen, GraduationCap, HeartPulse, 
   ChevronLeft, ChevronRight, Edit, X, Save
 } from 'lucide-react';
-import { getAllAbout, updateAbout, addAbout } from '../services/aboutService';
+import { getAllAbout, updateAbout, addAbout, getAboutById } from '../services/aboutService';
 import { getAllEducation } from '../services/educationService';
 import { getAllHobbies } from '../services/hobbiesService';
 
@@ -288,52 +288,23 @@ const About = () => {
     if (editingIndex === null) return;
     
     try {
-      DEBUG && debugLog('Starting save operation...');
-      DEBUG && debugLog('Content to save:', content);
-      DEBUG && debugLog('Editing index:', editingIndex);
-      
-      // Create a clean copy of the cards array without React elements to avoid circular refs
-      const updatedCards = [...cards].map(card => ({
-        ...card,
-        icon: '[React Component]', // Replace React component with a placeholder string
-        content: card.content
-      }));
-      
-      // Update the specific card's content
-      updatedCards[editingIndex] = {
-        ...updatedCards[editingIndex],
-        content
-      };
+      console.log('STARTING SAVE OPERATION...');
+      console.log('Content to save:', content);
+      console.log('Editing index:', editingIndex);
       
       // Save to Firebase based on which card is being edited
       if (editingIndex === 0) {
-        // About Me
-        DEBUG && debugLog('Saving About Me content...');
+        // About Me card
+        console.log('SAVING ABOUT ME CONTENT...');
         
-        // Create the final state update for our React component with the original icon
-        const finalCards = cards.map((card, idx) => {
-          if (idx === editingIndex) {
-            return {
-              ...card,
-              content
-            };
-          }
-          return card;
-        });
+        // Prepare the final cards state update
+        const finalCards = [...cards];
+        finalCards[editingIndex] = {
+          ...finalCards[editingIndex],
+          content: content  // Update the content in our local state
+        };
         
-        // Check Firebase connection before attempting save
-        DEBUG && debugLog('Checking Firebase connection...');
-        try {
-          const testGet = await getAllAbout();
-          DEBUG && debugLog('Firebase connection test successful', testGet);
-        } catch (connectionError) {
-          console.error("Firebase connection test failed:", connectionError);
-          debugLog('ERROR in Firebase connection test:', connectionError);
-          alert("Failed to connect to Firebase. Check console for details.");
-          return;
-        }
-        
-        // Create a clean about data object with only the required fields
+        // Prepare the data to save to Firebase
         const aboutData = {
           title: "About Me",
           bio: content,
@@ -342,90 +313,76 @@ const About = () => {
           location: "Your Location"
         };
         
-        DEBUG && debugLog('About data prepared for save:', aboutData);
+        console.log('ABOUT DATA TO SAVE:', JSON.stringify(aboutData, null, 2));
         
-        let saveSuccess = false;
-        
-        if (updatedCards[0].id) {
-          // Update existing record
-          const docId = updatedCards[0].id;
-          DEBUG && debugLog('Updating existing record with ID:', docId);
-          try {
-            console.log('Attempting to update about with ID:', docId);
-            // Only update the bio field to avoid overwriting other fields
+        try {
+          // Check if we have an existing About Me document
+          console.log('CHECKING FOR EXISTING ABOUT DOCUMENTS...');
+          const existingDocs = await getAllAbout();
+          const existingAboutMe = existingDocs.find(doc => doc.title === "About Me");
+          
+          let docId;
+          
+          if (existingAboutMe && existingAboutMe.id) {
+            // Update existing document
+            docId = existingAboutMe.id;
+            console.log('FOUND EXISTING DOCUMENT WITH ID:', docId);
+            
             const updateData = { bio: content };
-            console.log('Update data:', updateData);
+            console.log('UPDATING DOCUMENT WITH DATA:', JSON.stringify(updateData, null, 2));
             
             await updateAbout(docId, updateData);
-            console.log('Update completed, verifying...');
+            console.log('UPDATE SUCCESSFUL!');
             
-            // Verify the update succeeded by fetching the document again
-            const verifyData = await getAllAbout();
-            const updatedDoc = verifyData.find(item => item.id === docId);
+            // Update our local state with the document ID
+            finalCards[0].id = docId;
+          } else {
+            // Create new document
+            console.log('NO EXISTING DOCUMENT FOUND, CREATING NEW ONE...');
             
-            if (updatedDoc && updatedDoc.bio === content) {
-              console.log('Verification successful: Document updated correctly');
-              saveSuccess = true;
-            } else {
-              console.warn('Verification warning: Document may not have updated correctly', 
-                { expected: content, actual: updatedDoc?.bio });
-            }
-            
-            DEBUG && debugLog('Update operation completed successfully');
-          } catch (updateError) {
-            console.error("Error updating about data:", updateError);
-            debugLog('ERROR updating about data:', updateError);
-            alert(`Failed to update. Error: ${updateError.message || 'Unknown error'}`);
-            return;
-          }
-        } else {
-          // Add new record
-          DEBUG && debugLog('Creating new About Me record...');
-          try {
-            console.log('Attempting to add new about record:', aboutData);
             const newId = await addAbout(aboutData);
+            console.log('NEW DOCUMENT CREATED WITH ID:', newId);
+            
+            // Update our local state with the new document ID
             finalCards[0].id = newId;
-            console.log('New record created with ID:', newId);
-            
-            // Verify the add succeeded by fetching the document again
-            const verifyData = await getAllAbout();
-            const newDoc = verifyData.find(item => item.id === newId);
-            
-            if (newDoc && newDoc.bio === content) {
-              console.log('Verification successful: Document created correctly');
-              saveSuccess = true;
-            } else {
-              console.warn('Verification warning: Document may not have been created correctly', 
-                { expected: content, actual: newDoc?.bio });
-            }
-            
-            DEBUG && debugLog('New record created with ID:', newId);
-          } catch (addError) {
-            console.error("Error adding about data:", addError);
-            debugLog('ERROR adding about data:', addError);
-            alert(`Failed to add new record. Error: ${addError.message || 'Unknown error'}`);
-            return;
+            docId = newId;
           }
-        }
-        
-        // Update the component state with our properly formatted cards
-        setCards(finalCards);
-        DEBUG && debugLog('Cards state updated successfully');
-        
-        // Force a refresh to ensure we get the latest data from Firebase
-        if (saveSuccess) {
-          setTimeout(() => {
-            console.log('Refreshing data from Firebase...');
-            refreshData();
-          }, 1000); // Give Firebase a second to propagate the changes
+          
+          // Verify the operation by fetching the latest document
+          console.log('VERIFYING DOCUMENT UPDATE...');
+          const updatedDoc = await getAboutById(docId);
+          
+          if (updatedDoc && updatedDoc.bio === content) {
+            console.log('VERIFICATION SUCCESSFUL: Document contains correct data');
+            
+            // Update local state
+            setCards(finalCards);
+            console.log('LOCAL STATE UPDATED WITH NEW CONTENT AND ID');
+            
+            // Force a refresh after a delay
+            console.log('SCHEDULING DATA REFRESH...');
+            setTimeout(() => {
+              console.log('REFRESHING DATA FROM FIREBASE...');
+              refreshData();
+            }, 500);
+            
+            alert('Content saved successfully!');
+          } else {
+            console.warn('VERIFICATION WARNING:', { 
+              expected: content, 
+              actual: updatedDoc?.bio 
+            });
+            alert('Content may not have saved correctly. Please check the console.');
+          }
+        } catch (error) {
+          console.error("ERROR SAVING ABOUT DATA:", error);
+          alert(`Failed to save. Error: ${error.message || 'Unknown error'}`);
         }
       }
       // Note: For Education and Hobbies, the editing is simplified in this component
       
-      alert('Content saved successfully!');
     } catch (error) {
-      console.error("Error saving content:", error);
-      debugLog('ERROR in save operation:', error);
+      console.error("Error in save operation:", error);
       alert(`Failed to save. Error: ${error.message}`);
     }
   };

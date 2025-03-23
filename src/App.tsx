@@ -12,6 +12,7 @@ import Achievements from "./pages/Achievements";
 import SkillsPage from "./pages/Skills";
 import { initializeAllCollections } from "./lib/initializeData";
 import FirebaseTest from "./pages/FirebaseTest";
+import FirebaseDirectTest from "./pages/FirebaseDirectTest";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/achievements" element={<Achievements />} />
           <Route path="/skills" element={<SkillsPage />} />
           <Route path="/firebase-test" element={<FirebaseTest />} />
+          <Route path="/firebase-direct-test" element={<FirebaseDirectTest />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
