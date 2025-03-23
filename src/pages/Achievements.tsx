@@ -1,19 +1,35 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Pen, ExternalLink, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { achievements as initialAchievements } from '@/lib/achievements';
-import AddAchievementDialog from '@/components/AddAchievementDialog';
-import { Achievement } from '@/lib/achievements';
-import { useToast } from '@/hooks/use-toast';
+import { Plus, Edit, ExternalLink, Trash } from 'lucide-react';
+import AddAchievementDialog from '../components/AddAchievementDialog';
 
-const Achievements = () => {
-  const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  image: string;
+  link?: string;
+}
+
+const AchievementsPage = () => {
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
-  const { toast } = useToast();
+
+  const handleEdit = (achievement: Achievement) => {
+    setEditingAchievement(achievement);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleDelete = (achievementId: string) => {
+    setAchievements(prev => prev.filter(achievement => achievement.id !== achievementId));
+  };
+
+  const handleAddNewAchievement = () => {
+    setEditingAchievement(null);
+    setIsAddDialogOpen(true);
+  };
 
   const handleSaveAchievement = (achievement: Achievement) => {
     if (editingAchievement) {
@@ -21,143 +37,104 @@ const Achievements = () => {
       setAchievements(prev => 
         prev.map(a => a.id === achievement.id ? achievement : a)
       );
-      toast({
-        title: "Achievement updated",
-        description: "Your achievement has been updated successfully.",
-      });
     } else {
       // Add new achievement
       setAchievements(prev => [...prev, achievement]);
-      toast({
-        title: "Achievement added",
-        description: "Your new achievement has been added successfully.",
-      });
     }
     setIsAddDialogOpen(false);
     setEditingAchievement(null);
   };
 
-  const handleEditAchievement = (achievement: Achievement) => {
-    setEditingAchievement(achievement);
-    setIsAddDialogOpen(true);
-  };
-
-  const handleDeleteAchievement = (achievementId: string) => {
-    setAchievements(prev => prev.filter(achievement => achievement.id !== achievementId));
-    toast({
-      title: "Achievement deleted",
-      description: "Your achievement has been deleted successfully.",
-    });
-  };
-
-  const openAddDialog = () => {
-    setEditingAchievement(null);
-    setIsAddDialogOpen(true);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 dark:from-background dark:to-secondary/10 px-4 py-20">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between">
-          <div>
-            <Link to="/" className="inline-flex items-center text-primary hover:underline mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Link>
-            <h1 className="text-4xl font-bold">My Achievements</h1>
-            <p className="text-muted-foreground mt-2">A collection of my accomplishments and recognitions</p>
-          </div>
+    <section className="py-20">
+      <div className="section-container">
+        <div className="text-center mb-12 animate-fade-in">
+          <h2 className="mb-4">All Achievements</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Here you can explore all my achievements and add new ones.
+          </p>
+        </div>
+        
+        <div className="flex justify-center animate-fade-in mb-6">
+          <Link to="/" className="btn-secondary">
+            Back to Home
+          </Link>
         </div>
 
-        {/* Achievements Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          {/* Always present "Add New Achievement" card */}
-          <Card className="flex flex-col h-full bg-primary/5 border-dashed border-primary/30 hover:bg-primary/10 transition-colors cursor-pointer" onClick={openAddDialog}>
-            <div className="flex flex-col items-center justify-center h-full py-12">
-              <div className="rounded-full bg-primary/20 p-4 mb-4">
-                <Plus className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-medium text-center">New Achievement</h3>
-              <p className="text-muted-foreground text-center mt-2">Click to add a new achievement</p>
-            </div>
-          </Card>
-          
           {/* Display existing achievements */}
           {achievements.map((achievement) => (
-            <Card key={achievement.id} className="flex flex-col h-full relative">
-              <button
-                onClick={() => handleDeleteAchievement(achievement.id)}
-                className="absolute top-3 right-3 z-10 p-1.5 bg-destructive/90 text-white rounded-full hover:bg-destructive transition-colors"
-                aria-label="Delete Achievement"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-              
-              <CardHeader>
-                <div className="relative w-full h-48 -mt-1 -mx-1 overflow-hidden rounded-t-lg">
-                  <img 
-                    src={achievement.image} 
-                    alt={achievement.title} 
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                  <div className="absolute top-3 left-3 bg-primary/90 dark:bg-accent/90 text-white text-xs px-2 py-1 rounded">
-                    {achievement.date}
-                  </div>
+            <div 
+              key={achievement.id}
+              className="achievement-card flex flex-col h-full animate-fade-in"
+            >
+              <div className="relative w-full h-48 mb-4 overflow-hidden rounded-lg">
+                <img 
+                  src={achievement.image} 
+                  alt={achievement.title} 
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                />
+                <div className="absolute top-3 left-3 bg-primary/90 dark:bg-accent/90 text-white text-xs px-2 py-1 rounded">
+                  {achievement.date}
                 </div>
-                <CardTitle className="text-xl mt-4">{achievement.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <p className="text-muted-foreground">{achievement.description}</p>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                {achievement.link ? (
-                  <Button 
-                    variant="outline" 
-                    asChild
-                    className="flex-1 mr-2"
-                  >
+              </div>
+              <h3 className="text-xl font-bold mb-2">{achievement.title}</h3>
+              <p className="text-muted-foreground mb-4 flex-grow">{achievement.description}</p>
+              
+              <div className="mt-auto flex justify-between items-center">
+                <div>
+                  {achievement.link && (
                     <a 
-                      href={achievement.link} 
-                      target="_blank" 
+                      href={achievement.link}
+                      target="_blank"
                       rel="noopener noreferrer"
+                      className="flex items-center text-primary dark:text-accent font-medium hover:underline"
                     >
-                      View
-                      <ExternalLink className="ml-2 h-4 w-4" />
+                      View Award
+                      <ExternalLink className="ml-1 h-4 w-4" />
                     </a>
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    disabled
-                    className="flex-1 mr-2"
+                  )}
+                </div>
+                <div className="flex space-x-3">
+                  <button 
+                    onClick={() => handleEdit(achievement)}
+                    className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+                    aria-label="Edit Achievement"
                   >
-                    No Link Available
-                  </Button>
-                )}
-                <Button 
-                  variant="secondary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditAchievement(achievement);
-                  }}
-                >
-                  <Pen className="h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(achievement.id)}
+                    className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+                    aria-label="Delete Achievement"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
+          
+          {/* Add new achievement card */}
+          <div 
+            className="achievement-card flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
+            onClick={handleAddNewAchievement}
+          >
+            <Plus className="h-8 w-8 text-primary mb-2" />
+            <span className="text-primary dark:text-accent font-medium">Add Achievement</span>
+          </div>
         </div>
       </div>
 
-      <AddAchievementDialog 
-        open={isAddDialogOpen} 
+      {/* Achievement Dialog for adding/editing */}
+      <AddAchievementDialog
+        open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSave={handleSaveAchievement}
         achievement={editingAchievement}
       />
-    </div>
+    </section>
   );
 };
 
-export default Achievements;
+export default AchievementsPage;
