@@ -10,12 +10,30 @@ import ProjectDetails from "./pages/ProjectDetails";
 import ProjectsPage from "./pages/projects";
 import Achievements from "./pages/Achievements";
 import SkillsPage from "./pages/Skills";
+import { initializeAllCollections } from "./lib/initializeData";
 
 const queryClient = new QueryClient();
 
 const ScrollToTop = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+  
+  return null;
+};
+
+// Component to initialize Firebase data
+const FirebaseInitializer = () => {
+  useEffect(() => {
+    const initData = async () => {
+      try {
+        await initializeAllCollections();
+      } catch (error) {
+        console.error('Error initializing Firebase data:', error);
+      }
+    };
+    
+    initData();
   }, []);
   
   return null;
@@ -28,6 +46,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <FirebaseInitializer />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/project/:id" element={<ProjectDetails />} />

@@ -10,7 +10,7 @@ export interface Skill {
   id: string;
   name: string;
   level: number;
-  subtopics: string;
+  subtopics: string[] | string;
   icon?: string;
 }
 
@@ -35,7 +35,12 @@ const AddSkillDialog = ({
     if (skill) {
       setName(skill.name);
       setLevel(skill.level);
-      setSubtopics(skill.subtopics);
+      
+      if (Array.isArray(skill.subtopics)) {
+        setSubtopics(skill.subtopics.join(', '));
+      } else {
+        setSubtopics(skill.subtopics);
+      }
     } else {
       resetForm();
     }
@@ -50,11 +55,16 @@ const AddSkillDialog = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const subtopicsArray = subtopics
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+    
     const newSkill: Skill = {
       id: skill ? skill.id : `skill-${Date.now()}`,
       name,
       level,
-      subtopics
+      subtopics: subtopicsArray
     };
     
     onSave(newSkill);
