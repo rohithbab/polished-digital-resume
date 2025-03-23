@@ -114,9 +114,38 @@ const EditModal = ({ isOpen, onClose, title, content, onSave }: {
 
 // Add this debug function at the file level, outside any component
 const debugLog = (message, data = null) => {
-  const log = data ? `DEBUG: ${message} ${JSON.stringify(data, null, 2)}` : `DEBUG: ${message}`;
-  console.log(log);
-  return log;
+  try {
+    // Safe stringify to handle circular references
+    const safeStringify = (obj) => {
+      const seen = new WeakSet();
+      return JSON.stringify(obj, (key, value) => {
+        // Skip React component references that cause circular references
+        if (key === 'icon' || key === '_owner' || key === '_reactInternalInstance' || 
+            key.startsWith('_react') || key.startsWith('__react')) {
+          return '[React Component]';
+        }
+        
+        // Handle circular references
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return '[Circular Reference]';
+          }
+          seen.add(value);
+        }
+        return value;
+      }, 2);
+    };
+    
+    const log = data 
+      ? `DEBUG: ${message} ${safeStringify(data)}`
+      : `DEBUG: ${message}`;
+      
+    console.log(log);
+    return log;
+  } catch (error) {
+    console.log(`DEBUG: ${message} [Error stringifying data: ${error.message}]`);
+    return `DEBUG: ${message} [Data not serializable]`;
+  }
 };
 
 const About = () => {
@@ -124,6 +153,7 @@ const About = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force re-render
   
   // Add debug flag for more verbose logging
   const DEBUG = true;
@@ -148,7 +178,7 @@ const About = () => {
 
   const [cards, setCards] = useState<AboutCardData[]>(defaultCards);
 
-  // Fetch data from Firebase when component mounts
+  // Fetch data from Firebase when component mounts or refresh key changes
   useEffect(() => {
     const fetchAboutData = async () => {
       try {
@@ -234,7 +264,7 @@ const About = () => {
     };
     
     fetchAboutData();
-  }, []);
+  }, [refreshKey]); // Add refreshKey as a dependency to re-fetch data when it changes
 
   const prevCard = () => {
     setActiveIndex((prev) => (prev - 1 + cards.length) % cards.length);
@@ -249,6 +279,11 @@ const About = () => {
     setIsEditModalOpen(true);
   };
 
+  // Function to refresh data from Firebase
+  const refreshData = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   const handleSaveContent = async (content: string) => {
     if (editingIndex === null) return;
     
@@ -257,7 +292,14 @@ const About = () => {
       DEBUG && debugLog('Content to save:', content);
       DEBUG && debugLog('Editing index:', editingIndex);
       
-      const updatedCards = [...cards];
+      // Create a clean copy of the cards array without React elements to avoid circular refs
+      const updatedCards = [...cards].map(card => ({
+        ...card,
+        icon: '[React Component]', // Replace React component with a placeholder string
+        content: card.content
+      }));
+      
+      // Update the specific card's content
       updatedCards[editingIndex] = {
         ...updatedCards[editingIndex],
         content
@@ -267,6 +309,17 @@ const About = () => {
       if (editingIndex === 0) {
         // About Me
         DEBUG && debugLog('Saving About Me content...');
+        
+        // Create the final state update for our React component with the original icon
+        const finalCards = cards.map((card, idx) => {
+          if (idx === editingIndex) {
+            return {
+              ...card,
+              content
+            };
+          }
+          return card;
+        });
         
         // Check Firebase connection before attempting save
         DEBUG && debugLog('Checking Firebase connection...');
@@ -280,49 +333,95 @@ const About = () => {
           return;
         }
         
+        // Create a clean about data object with only the required fields
         const aboutData = {
           title: "About Me",
           bio: content,
-          headline: "Data Analyst", // Default values
-          email: "example@example.com", // Required field
-          location: "Your Location" // Required field
+          headline: "Data Analyst",
+          email: "example@example.com", 
+          location: "Your Location"
         };
         
         DEBUG && debugLog('About data prepared for save:', aboutData);
         
+        let saveSuccess = false;
+        
         if (updatedCards[0].id) {
           // Update existing record
-          DEBUG && debugLog('Updating existing record with ID:', updatedCards[0].id);
+          const docId = updatedCards[0].id;
+          DEBUG && debugLog('Updating existing record with ID:', docId);
           try {
-            await updateAbout(updatedCards[0].id, { bio: content });
+            console.log('Attempting to update about with ID:', docId);
+            // Only update the bio field to avoid overwriting other fields
+            const updateData = { bio: content };
+            console.log('Update data:', updateData);
+            
+            await updateAbout(docId, updateData);
+            console.log('Update completed, verifying...');
+            
+            // Verify the update succeeded by fetching the document again
+            const verifyData = await getAllAbout();
+            const updatedDoc = verifyData.find(item => item.id === docId);
+            
+            if (updatedDoc && updatedDoc.bio === content) {
+              console.log('Verification successful: Document updated correctly');
+              saveSuccess = true;
+            } else {
+              console.warn('Verification warning: Document may not have updated correctly', 
+                { expected: content, actual: updatedDoc?.bio });
+            }
+            
             DEBUG && debugLog('Update operation completed successfully');
           } catch (updateError) {
             console.error("Error updating about data:", updateError);
             debugLog('ERROR updating about data:', updateError);
-            alert("Failed to update. Check console for details.");
+            alert(`Failed to update. Error: ${updateError.message || 'Unknown error'}`);
             return;
           }
         } else {
           // Add new record
           DEBUG && debugLog('Creating new About Me record...');
           try {
+            console.log('Attempting to add new about record:', aboutData);
             const newId = await addAbout(aboutData);
+            finalCards[0].id = newId;
+            console.log('New record created with ID:', newId);
+            
+            // Verify the add succeeded by fetching the document again
+            const verifyData = await getAllAbout();
+            const newDoc = verifyData.find(item => item.id === newId);
+            
+            if (newDoc && newDoc.bio === content) {
+              console.log('Verification successful: Document created correctly');
+              saveSuccess = true;
+            } else {
+              console.warn('Verification warning: Document may not have been created correctly', 
+                { expected: content, actual: newDoc?.bio });
+            }
+            
             DEBUG && debugLog('New record created with ID:', newId);
-            updatedCards[0].id = newId;
           } catch (addError) {
             console.error("Error adding about data:", addError);
             debugLog('ERROR adding about data:', addError);
-            alert("Failed to add new record. Check console for details.");
+            alert(`Failed to add new record. Error: ${addError.message || 'Unknown error'}`);
             return;
           }
         }
+        
+        // Update the component state with our properly formatted cards
+        setCards(finalCards);
+        DEBUG && debugLog('Cards state updated successfully');
+        
+        // Force a refresh to ensure we get the latest data from Firebase
+        if (saveSuccess) {
+          setTimeout(() => {
+            console.log('Refreshing data from Firebase...');
+            refreshData();
+          }, 1000); // Give Firebase a second to propagate the changes
+        }
       }
-      
       // Note: For Education and Hobbies, the editing is simplified in this component
-      // A more complete implementation would use dedicated forms for each education/hobby item
       
-      setCards(updatedCards);
-      DEBUG && debugLog('Cards state updated successfully', updatedCards);
       alert('Content saved successfully!');
     } catch (error) {
       console.error("Error saving content:", error);

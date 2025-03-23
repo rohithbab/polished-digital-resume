@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { collection, getDocs, limit, query } from '@firebase/firestore';
+import { collection, getDocs, limit, query, setDoc, doc, deleteDoc } from '@firebase/firestore';
 
 /**
  * Tests Firebase connection by attempting to read from a collection
@@ -53,6 +53,73 @@ export const testFirebaseConnection = async (): Promise<{success: boolean, error
     return {
       success: false,
       error: err.message || 'Unknown error during Firebase connection test'
+    };
+  }
+};
+
+/**
+ * Tests Firebase permissions by attempting read and write operations
+ */
+export const testFirebasePermissions = async (): Promise<{
+  read: {success: boolean, error?: string},
+  write: {success: boolean, error?: string},
+  delete: {success: boolean, error?: string}
+}> => {
+  const testCollectionName = 'firebase_test_permissions';
+  const testDocId = 'test_permissions_doc';
+  const results = {
+    read: { success: false } as {success: boolean, error?: string},
+    write: { success: false } as {success: boolean, error?: string},
+    delete: { success: false } as {success: boolean, error?: string}
+  };
+  
+  try {
+    // Test write permission
+    try {
+      const docRef = doc(db, testCollectionName, testDocId);
+      await setDoc(docRef, { 
+        timestamp: new Date().toISOString(),
+        message: 'Testing write permissions'
+      });
+      results.write = { success: true };
+    } catch (error: any) {
+      results.write = { 
+        success: false, 
+        error: error.message || 'Unknown write error' 
+      };
+    }
+    
+    // Test read permission
+    try {
+      const collRef = collection(db, testCollectionName);
+      await getDocs(collRef);
+      results.read = { success: true };
+    } catch (error: any) {
+      results.read = { 
+        success: false, 
+        error: error.message || 'Unknown read error' 
+      };
+    }
+    
+    // Test delete permission
+    try {
+      const docRef = doc(db, testCollectionName, testDocId);
+      await deleteDoc(docRef);
+      results.delete = { success: true };
+    } catch (error: any) {
+      results.delete = { 
+        success: false, 
+        error: error.message || 'Unknown delete error' 
+      };
+    }
+    
+    return results;
+  } catch (err: any) {
+    console.error('Firebase permissions test failed:', err);
+    return {
+      read: { success: false, error: 'Test failed to run' },
+      write: { success: false, error: 'Test failed to run' },
+      delete: { success: false, error: 'Test failed to run' }
     };
   }
 };
