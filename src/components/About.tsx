@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   BookOpen, GraduationCap, HeartPulse, 
   ChevronLeft, ChevronRight, Edit, X, Save
 } from 'lucide-react';
+import { getAllAbout, updateAbout, addAbout } from '../services/aboutService';
+import { getAllEducation } from '../services/educationService';
+import { getAllHobbies } from '../services/hobbiesService';
 
 interface AboutCardProps {
   title: string;
@@ -13,6 +16,7 @@ interface AboutCardProps {
 }
 
 interface AboutCardData {
+  id?: string;
   title: string;
   icon: React.ReactNode;
   content: string;
@@ -112,6 +116,7 @@ const About = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   const defaultCards: AboutCardData[] = [
     {
@@ -133,6 +138,73 @@ const About = () => {
 
   const [cards, setCards] = useState<AboutCardData[]>(defaultCards);
 
+  // Fetch data from Firebase when component mounts
+  useEffect(() => {
+    const fetchAboutData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch about data
+        const aboutData = await getAllAbout();
+        let aboutMe = aboutData.find(item => item.title === "About Me");
+        
+        // Fetch education data and format it
+        const educationData = await getAllEducation();
+        let educationContent = "";
+        if (educationData.length > 0) {
+          educationContent = educationData.map(edu => 
+            `<strong>${edu.degree} in ${edu.field}</strong><br>` +
+            `${edu.institution}, ${edu.location}<br>` +
+            `${edu.startDate} - ${edu.endDate}<br>` +
+            `${edu.description || ""}`
+          ).join("<br><br>");
+        }
+        
+        // Fetch hobbies data and format it
+        const hobbiesData = await getAllHobbies();
+        let hobbiesContent = "";
+        if (hobbiesData.length > 0) {
+          hobbiesContent = hobbiesData.map(hobby => 
+            `<strong>${hobby.name}</strong><br>${hobby.description}`
+          ).join("<br><br>");
+        }
+        
+        // Update cards with fetched data
+        const updatedCards = [...defaultCards];
+        
+        if (aboutMe) {
+          updatedCards[0] = {
+            ...updatedCards[0],
+            id: aboutMe.id,
+            content: aboutMe.bio || ""
+          };
+        }
+        
+        if (educationContent) {
+          updatedCards[1] = {
+            ...updatedCards[1],
+            content: educationContent
+          };
+        }
+        
+        if (hobbiesContent) {
+          updatedCards[2] = {
+            ...updatedCards[2],
+            content: hobbiesContent
+          };
+        }
+        
+        setCards(updatedCards);
+      } catch (error) {
+        console.error("Error fetching about data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchAboutData();
+  }, []);
+
   const prevCard = () => {
     setActiveIndex((prev) => (prev - 1 + cards.length) % cards.length);
   };
@@ -146,14 +218,44 @@ const About = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveContent = (content: string) => {
-    if (editingIndex !== null) {
+  const handleSaveContent = async (content: string) => {
+    if (editingIndex === null) return;
+    
+    try {
       const updatedCards = [...cards];
       updatedCards[editingIndex] = {
         ...updatedCards[editingIndex],
         content
       };
+      
+      // Save to Firebase based on which card is being edited
+      if (editingIndex === 0) {
+        // About Me
+        const aboutData = {
+          title: "About Me",
+          bio: content,
+          headline: "Data Analyst", // Default values
+          email: "",
+          location: ""
+        };
+        
+        if (updatedCards[0].id) {
+          // Update existing record
+          await updateAbout(updatedCards[0].id, { bio: content });
+        } else {
+          // Add new record
+          const newId = await addAbout(aboutData);
+          updatedCards[0].id = newId;
+        }
+      }
+      
+      // Note: For Education and Hobbies, the editing is simplified in this component
+      // A more complete implementation would use dedicated forms for each education/hobby item
+      
       setCards(updatedCards);
+    } catch (error) {
+      console.error("Error saving content:", error);
+      alert("Failed to save. Please try again.");
     }
   };
 
@@ -167,39 +269,45 @@ const About = () => {
           </p>
         </div>
 
-        <div className="relative">
-          {/* Simple Card Carousel */}
-          <div className="relative flex justify-center items-center h-[400px]">
-            {cards.map((card, index) => (
-              <AboutCard 
-                key={index}
-                title={card.title} 
-                icon={card.icon}
-                content={card.content}
-                isActive={index === activeIndex}
-                onEdit={() => handleEditClick(index)}
-              />
-            ))}
+        {isLoading ? (
+          <div className="flex justify-center py-12 animate-fade-in">
+            <div className="h-12 w-12 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
           </div>
+        ) : (
+          <div className="relative">
+            {/* Simple Card Carousel */}
+            <div className="relative flex justify-center items-center h-[400px]">
+              {cards.map((card, index) => (
+                <AboutCard 
+                  key={index}
+                  title={card.title} 
+                  icon={card.icon}
+                  content={card.content}
+                  isActive={index === activeIndex}
+                  onEdit={() => handleEditClick(index)}
+                />
+              ))}
+            </div>
 
-          {/* Navigation Arrows */}
-          <div className="flex justify-center gap-8 mt-12">
-            <button
-              onClick={prevCard}
-              className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
-              aria-label="Previous card"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button
-              onClick={nextCard}
-              className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
-              aria-label="Next card"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
+            {/* Navigation Arrows */}
+            <div className="flex justify-center gap-8 mt-12">
+              <button
+                onClick={prevCard}
+                className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
+                aria-label="Previous card"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                onClick={nextCard}
+                className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
+                aria-label="Next card"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Edit Modal */}
