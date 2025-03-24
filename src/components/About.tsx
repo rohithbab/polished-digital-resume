@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { getAllAbout, updateAbout, addAbout, getAboutById } from '../services/aboutService';
 import { getAllEducation, updateEducation, addEducation, deleteEducation } from '../services/educationService';
-import { getAllHobbies } from '../services/hobbiesService';
+import { getAllHobbies, updateHobby, addHobby } from '../services/hobbiesService';
 import { About as AboutType } from '../lib/about';
 import { debug } from '../lib/debug';
 import { debugEducation } from '../lib/debugEducation';
@@ -349,9 +349,53 @@ const About = () => {
         }
       } else if (editingIndex === 2) {
         console.log('Saving Hobbies content');
-        // Handle Hobbies content
-        debugHobbies.log('Attempting to save Hobbies content', { content });
-        // Add hobbies save logic here when needed
+        try {
+          const hobbiesContent = {
+            name: "Hobbies",
+            description: content,
+            lastUpdated: new Date().toISOString()
+          };
+
+          console.log('Saving hobbies content:', hobbiesContent);
+
+          // Always update the existing document if we have an ID
+          const existingId = cards[editingIndex].id;
+          if (existingId) {
+            console.log('Updating existing Hobbies document:', existingId);
+            await updateHobby(existingId, hobbiesContent);
+            console.log('Document updated successfully');
+
+            // Update local state with exactly what the user entered
+            const updatedCards = [...cards];
+            updatedCards[editingIndex] = {
+              ...updatedCards[editingIndex],
+              id: existingId,
+              content: content
+            };
+            setCards(updatedCards);
+          } else {
+            // Create new document if we don't have an existing one
+            console.log('Creating new Hobbies document');
+            const newId = await addHobby(hobbiesContent);
+            console.log('New document created:', newId);
+            
+            // Update local state with exactly what the user entered
+            const updatedCards = [...cards];
+            updatedCards[editingIndex] = {
+              ...updatedCards[editingIndex],
+              id: newId,
+              content: content
+            };
+            setCards(updatedCards);
+          }
+
+          // Force refresh to get the latest data
+          setRefreshKey(prev => prev + 1);
+        } catch (err) {
+          console.error('Error saving hobbies content:', err);
+          setError('Failed to save hobbies content. Please try again.');
+          throw err;
+        }
       }
 
       // Force refresh to get the latest data
