@@ -176,19 +176,11 @@ const About = () => {
         // Fetch Education data
         const educationData = await getAllEducation();
         if (educationData && educationData.length > 0) {
-          const educationContent = educationData.map(edu => 
-            `<strong>School:</strong> ${edu.institution}<br>` +
-            `<strong>Percentage:</strong> ${edu.description}<br><br>` +
-            `<strong>College:</strong> ${edu.additionalInfo?.college || ''}<br>` +
-            `<strong>Department:</strong> ${edu.additionalInfo?.department || ''}<br>` +
-            `<strong>CGPA:</strong> ${edu.additionalInfo?.cgpa || ''}`
-          ).join("<br><br>");
-
           const updatedCards = [...cards];
           updatedCards[1] = {
             ...updatedCards[1],
             id: educationData[0].id,
-            content: educationContent
+            content: educationData[0].description || ""
           };
           setCards(updatedCards);
           debugEducation.log('Education data loaded successfully', educationData, 'success');
@@ -197,15 +189,11 @@ const About = () => {
         // Fetch Hobbies data
         const hobbiesData = await getAllHobbies();
         if (hobbiesData && hobbiesData.length > 0) {
-          const hobbiesContent = hobbiesData.map(hobby => 
-            `<strong>${hobby.name}</strong><br>${hobby.description}`
-          ).join("<br><br>");
-
           const updatedCards = [...cards];
           updatedCards[2] = {
             ...updatedCards[2],
             id: hobbiesData[0].id,
-            content: hobbiesContent
+            content: hobbiesData[0].description || ""
           };
           setCards(updatedCards);
           debugHobbies.log('Hobbies data loaded successfully', hobbiesData, 'success');
@@ -299,52 +287,62 @@ const About = () => {
         console.log('About Me content saved successfully');
       } else if (editingIndex === 1) {
         console.log('Saving Education content');
-        // Handle Education content
-        debugEducation.log('Attempting to save Education content', { content });
-        
-        // Parse the content to extract education details
-        const lines = content.split('\n');
-        const schoolLine = lines[0].split(': ');
-        const percentageLine = lines[1].split(': ');
-        const collegeLine = lines[2].split(': ');
-        const departmentLine = lines[3].split(': ');
-        const cgpaLine = lines[4].split(': ');
-        
-        const educationContent = {
-          degree: "High School",
-          field: "General",
-          institution: schoolLine[1],
-          location: "India",
-          startDate: "2019",
-          endDate: "2021",
-          description: `Percentage: ${percentageLine[1]}`,
-          additionalInfo: {
-            college: collegeLine[1],
-            department: departmentLine[1],
-            cgpa: cgpaLine[1]
-          }
-        };
-
-        // Always update the existing document if we have an ID
-        const existingId = cards[editingIndex].id;
-        if (existingId) {
-          debugEducation.log('Updating existing Education document', { id: existingId });
-          await updateEducation(existingId, educationContent);
-          debugEducation.log('Document updated successfully', { id: existingId }, 'success');
-        } else {
-          // Only create a new document if we don't have an existing one
-          debugEducation.log('Creating new Education document');
-          const newId = await addEducation(educationContent);
-          debugEducation.log('New document created', { id: newId }, 'success');
-          
-          // Update the card's ID with the new document ID
-          const updatedCards = [...cards];
-          updatedCards[editingIndex] = {
-            ...updatedCards[editingIndex],
-            id: newId,
-            content: content
+        try {
+          // Create education content object with the raw content
+          const educationContent = {
+            degree: "High School",
+            field: "General",
+            institution: "Angels Babyland Matric Higher Secondary School",
+            location: "India",
+            startDate: "2019",
+            endDate: "2021",
+            description: content,
+            additionalInfo: {
+              college: "SIMATS Engineering",
+              department: "Computer Science & Engineering (CSE)",
+              cgpa: "9.0"
+            }
           };
-          setCards(updatedCards);
+
+          console.log('Saving education content:', educationContent);
+
+          // Always update the existing document if we have an ID
+          const existingId = cards[editingIndex].id;
+          if (existingId) {
+            console.log('Updating existing Education document:', existingId);
+            await updateEducation(existingId, educationContent);
+            console.log('Document updated successfully');
+
+            // Update local state with exactly what the user entered
+            const updatedCards = [...cards];
+            updatedCards[editingIndex] = {
+              ...updatedCards[editingIndex],
+              id: existingId,
+              content: content  // Use the raw content directly
+            };
+            setCards(updatedCards);
+          } else {
+            // Create new document if we don't have an existing one
+            console.log('Creating new Education document');
+            const newId = await addEducation(educationContent);
+            console.log('New document created:', newId);
+            
+            // Update local state with exactly what the user entered
+            const updatedCards = [...cards];
+            updatedCards[editingIndex] = {
+              ...updatedCards[editingIndex],
+              id: newId,
+              content: content  // Use the raw content directly
+            };
+            setCards(updatedCards);
+          }
+
+          // Force refresh to get the latest data
+          setRefreshKey(prev => prev + 1);
+        } catch (err) {
+          console.error('Error saving education content:', err);
+          setError('Failed to save education content. Please try again.');
+          throw err;
         }
       } else if (editingIndex === 2) {
         console.log('Saving Hobbies content');
