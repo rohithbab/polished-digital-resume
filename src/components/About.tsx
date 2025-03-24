@@ -245,11 +245,7 @@ const About = () => {
   const handleSaveContent = async (content: string) => {
     console.log('=== DEBUG: handleSaveContent ===');
     console.log('Editing index:', editingIndex);
-    console.log('Current cards:', cards.map(card => ({
-      title: card.title,
-      id: card.id,
-      content: card.content
-    })));
+    console.log('Content to save:', content);
     
     if (editingIndex === null) {
       console.log('No editing index found');
@@ -258,28 +254,49 @@ const About = () => {
 
     try {
       if (editingIndex === 0) {
-        console.log('Saving About content');
         // Handle About Me content
-        debug.log('Attempting to save About content', { content });
+        console.log('Saving About Me content to Firebase');
         const updatedContent: Partial<AboutType> = {
-          title: "About Me",
           bio: content,
-          headline: "Data Analyst",
-          email: "example@example.com",
-          location: "Your Location"
+          // Keep existing data if available, otherwise use defaults
+          title: about?.title || "About Me",
+          headline: about?.headline || "Data Analyst",
+          email: about?.email || "example@example.com",
+          location: about?.location || "Your Location"
         };
 
-        // Always update the existing document if we have an ID
+        let docId;
         if (about?.id) {
-          debug.log('Updating existing About document', { id: about.id });
+          // Update existing document
+          console.log('Updating existing About document:', about.id);
           await updateAbout(about.id, updatedContent);
-          debug.log('Document updated successfully', { id: about.id }, 'success');
+          docId = about.id;
+          console.log('About document updated successfully');
         } else {
-          // Only create a new document if we don't have an existing one
-          debug.log('Creating new About document');
-          const newId = await addAbout(updatedContent as Omit<AboutType, 'id'>);
-          debug.log('New document created', { id: newId }, 'success');
+          // Create new document
+          console.log('Creating new About document');
+          docId = await addAbout(updatedContent as AboutType);
+          console.log('New About document created:', docId);
         }
+
+        // Update local state
+        const updatedCards = [...cards];
+        updatedCards[editingIndex] = {
+          ...updatedCards[editingIndex],
+          id: docId,
+          content: content
+        };
+        setCards(updatedCards);
+        
+        // Update about state
+        setAbout(prev => ({
+          ...prev,
+          id: docId,
+          bio: content,
+          ...updatedContent
+        } as AboutType));
+
+        console.log('About Me content saved successfully');
       } else if (editingIndex === 1) {
         console.log('Saving Education content');
         // Handle Education content
@@ -336,26 +353,12 @@ const About = () => {
         // Add hobbies save logic here when needed
       }
 
-      // Update local state
-      const updatedCards = [...cards];
-      updatedCards[editingIndex] = {
-        ...updatedCards[editingIndex],
-        content: content
-      };
-      setCards(updatedCards);
-      console.log('Updated cards state:', updatedCards.map(card => ({
-        title: card.title,
-        id: card.id,
-        content: card.content
-      })));
-
       // Force refresh to get the latest data
       setRefreshKey(prev => prev + 1);
       
-      console.log('Content saved successfully');
     } catch (err) {
       console.error('Error saving content:', err);
-      setError('Failed to save content');
+      setError('Failed to save content. Please try again.');
       throw err;
     }
   };
