@@ -159,47 +159,59 @@ const About = () => {
     const fetchData = async () => {
       debug.log('Fetching About data in component');
       try {
+        // Create a single updatedCards array to track all changes
+        let updatedCards = [...defaultCards];
+
         // Fetch About data
         const aboutData = await getAllAbout();
+        console.log('Fetched About data:', aboutData);
+        
         if (aboutData && aboutData.length > 0) {
-          setAbout(aboutData[0]);
-          const updatedCards = [...cards];
+          const latestAbout = aboutData[0];
+          console.log('Setting About data:', latestAbout);
+          
+          // Update about state
+          setAbout(latestAbout);
+          
+          // Update About Me card
           updatedCards[0] = {
             ...updatedCards[0],
-            id: aboutData[0].id,
-            content: aboutData[0].bio || ""
+            id: latestAbout.id,
+            content: latestAbout.bio || "",
+            title: "About Me"
           };
-          setCards(updatedCards);
-          debug.log('About data loaded successfully', aboutData[0], 'success');
         }
 
         // Fetch Education data
         const educationData = await getAllEducation();
         if (educationData && educationData.length > 0) {
-          const updatedCards = [...cards];
+          // Update Education card
           updatedCards[1] = {
             ...updatedCards[1],
             id: educationData[0].id,
-            content: educationData[0].description || ""
+            content: educationData[0].description || "",
+            title: "Education"
           };
-          setCards(updatedCards);
-          debugEducation.log('Education data loaded successfully', educationData, 'success');
         }
 
         // Fetch Hobbies data
         const hobbiesData = await getAllHobbies();
         if (hobbiesData && hobbiesData.length > 0) {
-          const updatedCards = [...cards];
+          // Update Hobbies card
           updatedCards[2] = {
             ...updatedCards[2],
             id: hobbiesData[0].id,
-            content: hobbiesData[0].description || ""
+            content: hobbiesData[0].description || "",
+            title: "Hobbies"
           };
-          setCards(updatedCards);
-          debugHobbies.log('Hobbies data loaded successfully', hobbiesData, 'success');
         }
+
+        // Set all cards at once after gathering all data
+        console.log('Setting all cards:', updatedCards);
+        setCards(updatedCards);
+
       } catch (err) {
-        debug.log('Error fetching data', err, 'error');
+        console.error('Error fetching data:', err);
         setError('Failed to load data');
       } finally {
         setIsLoading(false);
@@ -231,14 +243,7 @@ const About = () => {
   };
 
   const handleSaveContent = async (content: string) => {
-    console.log('=== DEBUG: handleSaveContent ===');
-    console.log('Editing index:', editingIndex);
-    console.log('Content to save:', content);
-    
-    if (editingIndex === null) {
-      console.log('No editing index found');
-      return;
-    }
+    if (editingIndex === null) return;
 
     try {
       if (editingIndex === 0) {
@@ -246,8 +251,7 @@ const About = () => {
         console.log('Saving About Me content to Firebase');
         const updatedContent: Partial<AboutType> = {
           bio: content,
-          // Keep existing data if available, otherwise use defaults
-          title: about?.title || "About Me",
+          title: "About Me",
           headline: about?.headline || "Data Analyst",
           email: about?.email || "example@example.com",
           location: about?.location || "Your Location"
@@ -255,28 +259,24 @@ const About = () => {
 
         let docId;
         if (about?.id) {
-          // Update existing document
           console.log('Updating existing About document:', about.id);
           await updateAbout(about.id, updatedContent);
           docId = about.id;
-          console.log('About document updated successfully');
         } else {
-          // Create new document
           console.log('Creating new About document');
           docId = await addAbout(updatedContent as AboutType);
-          console.log('New About document created:', docId);
         }
 
-        // Update local state
+        // Update both states at once
         const updatedCards = [...cards];
         updatedCards[editingIndex] = {
           ...updatedCards[editingIndex],
           id: docId,
           content: content
         };
+
+        // Update states
         setCards(updatedCards);
-        
-        // Update about state
         setAbout(prev => ({
           ...prev,
           id: docId,
@@ -285,6 +285,9 @@ const About = () => {
         } as AboutType));
 
         console.log('About Me content saved successfully');
+        
+        // Force refresh after successful save
+        setRefreshKey(prev => prev + 1);
       } else if (editingIndex === 1) {
         console.log('Saving Education content');
         try {
