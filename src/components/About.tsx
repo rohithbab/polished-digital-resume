@@ -6,6 +6,8 @@ import {
 import { getAllAbout, updateAbout, addAbout, getAboutById } from '../services/aboutService';
 import { getAllEducation } from '../services/educationService';
 import { getAllHobbies } from '../services/hobbiesService';
+import { About as AboutType } from '../lib/about';
+import { debug } from '../lib/debug';
 
 interface AboutCardProps {
   title: string;
@@ -112,51 +114,14 @@ const EditModal = ({ isOpen, onClose, title, content, onSave }: {
   );
 };
 
-// Add this debug function at the file level, outside any component
-const debugLog = (message, data = null) => {
-  try {
-    // Safe stringify to handle circular references
-    const safeStringify = (obj) => {
-      const seen = new WeakSet();
-      return JSON.stringify(obj, (key, value) => {
-        // Skip React component references that cause circular references
-        if (key === 'icon' || key === '_owner' || key === '_reactInternalInstance' || 
-            key.startsWith('_react') || key.startsWith('__react')) {
-          return '[React Component]';
-        }
-        
-        // Handle circular references
-        if (typeof value === 'object' && value !== null) {
-          if (seen.has(value)) {
-            return '[Circular Reference]';
-          }
-          seen.add(value);
-        }
-        return value;
-      }, 2);
-    };
-    
-    const log = data 
-      ? `DEBUG: ${message} ${safeStringify(data)}`
-      : `DEBUG: ${message}`;
-      
-    console.log(log);
-    return log;
-  } catch (error) {
-    console.log(`DEBUG: ${message} [Error stringifying data: ${error.message}]`);
-    return `DEBUG: ${message} [Data not serializable]`;
-  }
-};
-
 const About = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force re-render
-  
-  // Add debug flag for more verbose logging
-  const DEBUG = true;
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [about, setAbout] = useState<AboutType | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const defaultCards: AboutCardData[] = [
     {
@@ -178,93 +143,35 @@ const About = () => {
 
   const [cards, setCards] = useState<AboutCardData[]>(defaultCards);
 
-  // Fetch data from Firebase when component mounts or refresh key changes
   useEffect(() => {
-    const fetchAboutData = async () => {
+    const fetchAbout = async () => {
+      debug.log('Fetching About data in component');
       try {
-        setIsLoading(true);
-        DEBUG && debugLog('Fetching data from Firebase...');
-        
-        // Fetch about data
-        DEBUG && debugLog('Fetching about data...');
-        const aboutData = await getAllAbout();
-        DEBUG && debugLog('About data received:', aboutData);
-        
-        let aboutMe = aboutData.find(item => item.title === "About Me");
-        DEBUG && debugLog('About Me data:', aboutMe);
-        
-        // Fetch education data and format it
-        DEBUG && debugLog('Fetching education data...');
-        const educationData = await getAllEducation();
-        DEBUG && debugLog('Education data received:', educationData);
-        
-        let educationContent = "";
-        if (educationData.length > 0) {
-          educationContent = educationData.map(edu => 
-            `<strong>${edu.degree} in ${edu.field}</strong><br>` +
-            `${edu.institution}, ${edu.location}<br>` +
-            `${edu.startDate} - ${edu.endDate}<br>` +
-            `${edu.description || ""}`
-          ).join("<br><br>");
-          DEBUG && debugLog('Formatted education content created');
-        }
-        
-        // Fetch hobbies data and format it
-        DEBUG && debugLog('Fetching hobbies data...');
-        const hobbiesData = await getAllHobbies();
-        DEBUG && debugLog('Hobbies data received:', hobbiesData);
-        
-        let hobbiesContent = "";
-        if (hobbiesData.length > 0) {
-          hobbiesContent = hobbiesData.map(hobby => 
-            `<strong>${hobby.name}</strong><br>${hobby.description}`
-          ).join("<br><br>");
-          DEBUG && debugLog('Formatted hobbies content created');
-        }
-        
-        // Update cards with fetched data
-        const updatedCards = [...defaultCards];
-        
-        if (aboutMe) {
+        const data = await getAllAbout();
+        if (data && data.length > 0) {
+          setAbout(data[0]);
+          // Update the cards state with the fetched data
+          const updatedCards = [...cards];
           updatedCards[0] = {
             ...updatedCards[0],
-            id: aboutMe.id,
-            content: aboutMe.bio || ""
+            id: data[0].id,
+            content: data[0].bio || ""
           };
-          DEBUG && debugLog('About Me card updated with Firebase data');
+          setCards(updatedCards);
+          debug.log('About data loaded successfully', data[0], 'success');
         } else {
-          DEBUG && debugLog('No About Me data found in Firebase');
+          debug.log('No About data found', null, 'info');
         }
-        
-        if (educationContent) {
-          updatedCards[1] = {
-            ...updatedCards[1],
-            content: educationContent
-          };
-          DEBUG && debugLog('Education card updated with Firebase data');
-        }
-        
-        if (hobbiesContent) {
-          updatedCards[2] = {
-            ...updatedCards[2],
-            content: hobbiesContent
-          };
-          DEBUG && debugLog('Hobbies card updated with Firebase data');
-        }
-        
-        setCards(updatedCards);
-        DEBUG && debugLog('All cards updated with Firebase data', updatedCards);
-      } catch (error) {
-        console.error("Error fetching about data:", error);
-        debugLog('ERROR fetching data:', error);
+      } catch (err) {
+        debug.log('Error fetching About data', err, 'error');
+        setError('Failed to load about data');
       } finally {
         setIsLoading(false);
-        DEBUG && debugLog('Loading state completed');
       }
     };
-    
-    fetchAboutData();
-  }, [refreshKey]); // Add refreshKey as a dependency to re-fetch data when it changes
+
+    fetchAbout();
+  }, [refreshKey]);
 
   const prevCard = () => {
     setActiveIndex((prev) => (prev - 1 + cards.length) % cards.length);
@@ -279,113 +186,63 @@ const About = () => {
     setIsEditModalOpen(true);
   };
 
-  // Function to refresh data from Firebase
-  const refreshData = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
   const handleSaveContent = async (content: string) => {
-    if (editingIndex === null) return;
-    
+    debug.log('Attempting to save About content', { content });
     try {
-      console.log('STARTING SAVE OPERATION...');
-      console.log('Content to save:', content);
-      console.log('Editing index:', editingIndex);
-      
-      // Save to Firebase based on which card is being edited
-      if (editingIndex === 0) {
-        // About Me card
-        console.log('SAVING ABOUT ME CONTENT...');
-        
-        // Prepare the final cards state update
-        const finalCards = [...cards];
-        finalCards[editingIndex] = {
-          ...finalCards[editingIndex],
-          content: content  // Update the content in our local state
-        };
-        
-        // Prepare the data to save to Firebase
-        const aboutData = {
-          title: "About Me",
-          bio: content,
-          headline: "Data Analyst",
-          email: "example@example.com", 
-          location: "Your Location"
-        };
-        
-        console.log('ABOUT DATA TO SAVE:', JSON.stringify(aboutData, null, 2));
-        
-        try {
-          // Check if we have an existing About Me document
-          console.log('CHECKING FOR EXISTING ABOUT DOCUMENTS...');
-          const existingDocs = await getAllAbout();
-          const existingAboutMe = existingDocs.find(doc => doc.title === "About Me");
-          
-          let docId;
-          
-          if (existingAboutMe && existingAboutMe.id) {
-            // Update existing document
-            docId = existingAboutMe.id;
-            console.log('FOUND EXISTING DOCUMENT WITH ID:', docId);
-            
-            const updateData = { bio: content };
-            console.log('UPDATING DOCUMENT WITH DATA:', JSON.stringify(updateData, null, 2));
-            
-            await updateAbout(docId, updateData);
-            console.log('UPDATE SUCCESSFUL!');
-            
-            // Update our local state with the document ID
-            finalCards[0].id = docId;
-          } else {
-            // Create new document
-            console.log('NO EXISTING DOCUMENT FOUND, CREATING NEW ONE...');
-            
-            const newId = await addAbout(aboutData);
-            console.log('NEW DOCUMENT CREATED WITH ID:', newId);
-            
-            // Update our local state with the new document ID
-            finalCards[0].id = newId;
-            docId = newId;
-          }
-          
-          // Verify the operation by fetching the latest document
-          console.log('VERIFYING DOCUMENT UPDATE...');
-          const updatedDoc = await getAboutById(docId);
-          
-          if (updatedDoc && updatedDoc.bio === content) {
-            console.log('VERIFICATION SUCCESSFUL: Document contains correct data');
-            
-            // Update local state
-            setCards(finalCards);
-            console.log('LOCAL STATE UPDATED WITH NEW CONTENT AND ID');
-            
-            // Force a refresh after a delay
-            console.log('SCHEDULING DATA REFRESH...');
-            setTimeout(() => {
-              console.log('REFRESHING DATA FROM FIREBASE...');
-              refreshData();
-            }, 500);
-            
-            alert('Content saved successfully!');
-          } else {
-            console.warn('VERIFICATION WARNING:', { 
-              expected: content, 
-              actual: updatedDoc?.bio 
-            });
-            alert('Content may not have saved correctly. Please check the console.');
-          }
-        } catch (error) {
-          console.error("ERROR SAVING ABOUT DATA:", error);
-          alert(`Failed to save. Error: ${error.message || 'Unknown error'}`);
-        }
+      const updatedContent: Partial<AboutType> = {
+        title: "About Me",
+        bio: content,
+        headline: "Data Analyst",
+        email: "example@example.com",
+        location: "Your Location"
+      };
+
+      if (!about?.id) {
+        // Create new document
+        debug.log('Creating new About document');
+        const newId = await addAbout(updatedContent as Omit<AboutType, 'id'>);
+        debug.log('New document created', { id: newId }, 'success');
+      } else {
+        // Update existing document
+        debug.log('Updating existing About document', { id: about.id });
+        await updateAbout(about.id, updatedContent);
+        debug.log('Document updated successfully', { id: about.id }, 'success');
       }
-      // Note: For Education and Hobbies, the editing is simplified in this component
+
+      // Update local cards state
+      if (editingIndex !== null) {
+        const updatedCards = [...cards];
+        updatedCards[editingIndex] = {
+          ...updatedCards[editingIndex],
+          content: content
+        };
+        setCards(updatedCards);
+        debug.log('Local cards state updated', updatedCards, 'success');
+      }
+
+      // Verify the update
+      const verificationData = await getAllAbout();
+      debug.log('Verification data', verificationData, 'success');
+
+      // Force refresh
+      setRefreshKey(prev => prev + 1);
       
-    } catch (error) {
-      console.error("Error in save operation:", error);
-      alert(`Failed to save. Error: ${error.message}`);
+      // Show success message
+      debug.log('Content saved successfully', null, 'success');
+    } catch (err) {
+      debug.log('Error saving content', err, 'error');
+      setError('Failed to save content');
+      throw err;
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <section id="about" className="py-20 bg-secondary/30 dark:bg-secondary/10">
@@ -397,45 +254,39 @@ const About = () => {
           </p>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-12 animate-fade-in">
-            <div className="h-12 w-12 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+        <div className="relative">
+          {/* Simple Card Carousel */}
+          <div className="relative flex justify-center items-center h-[400px]">
+            {cards.map((card, index) => (
+              <AboutCard 
+                key={index}
+                title={card.title} 
+                icon={card.icon}
+                content={card.content}
+                isActive={index === activeIndex}
+                onEdit={() => handleEditClick(index)}
+              />
+            ))}
           </div>
-        ) : (
-          <div className="relative">
-            {/* Simple Card Carousel */}
-            <div className="relative flex justify-center items-center h-[400px]">
-              {cards.map((card, index) => (
-                <AboutCard 
-                  key={index}
-                  title={card.title} 
-                  icon={card.icon}
-                  content={card.content}
-                  isActive={index === activeIndex}
-                  onEdit={() => handleEditClick(index)}
-                />
-              ))}
-            </div>
 
-            {/* Navigation Arrows */}
-            <div className="flex justify-center gap-8 mt-12">
-              <button
-                onClick={prevCard}
-                className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
-                aria-label="Previous card"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              <button
-                onClick={nextCard}
-                className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
-                aria-label="Next card"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-            </div>
+          {/* Navigation Arrows */}
+          <div className="flex justify-center gap-8 mt-12">
+            <button
+              onClick={prevCard}
+              className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
+              aria-label="Previous card"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <button
+              onClick={nextCard}
+              className="p-4 rounded-full bg-secondary/70 hover:bg-secondary/90 dark:bg-secondary/40 dark:hover:bg-secondary/60 transition-colors shadow-md"
+              aria-label="Next card"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Edit Modal */}
@@ -446,6 +297,11 @@ const About = () => {
         content={editingIndex !== null ? cards[editingIndex].content : ""}
         onSave={handleSaveContent}
       />
+
+      <div className="debug-panel">
+        <h3>Debug Information</h3>
+        <pre>{JSON.stringify(about, null, 2)}</pre>
+      </div>
     </section>
   );
 };
