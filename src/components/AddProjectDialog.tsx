@@ -1,147 +1,149 @@
-import { useState, useEffect } from 'react';
-import { ExternalLink, Github } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  summary: string;
-  image: string;
-  demoUrl?: string;
-  codeUrl?: string;
-  technologies: string[];
-}
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
+import { Project } from '../lib/projects';
+import ImageUpload from './ImageUpload';
 
 interface AddProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (project: Project) => void;
-  project: Project | null;
+  project?: Project | null;
 }
 
-const AddProjectDialog = ({
-  open,
-  onOpenChange,
-  onSave,
-  project
-}: AddProjectDialogProps) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [image, setImage] = useState('');
-  const [demoUrl, setDemoUrl] = useState('');
-  const [codeUrl, setCodeUrl] = useState('');
+const AddProjectDialog = ({ open, onOpenChange, onSave, project }: AddProjectDialogProps) => {
+  const [formData, setFormData] = useState<Partial<Project>>({
+    title: '',
+    description: '',
+    summary: '',
+    image: '',
+    demoUrl: '',
+    codeUrl: '',
+    technologies: []
+  });
 
   useEffect(() => {
     if (project) {
-      setTitle(project.title);
-      setDescription(project.description);
-      setImage(project.image);
-      setDemoUrl(project.demoUrl || '');
-      setCodeUrl(project.codeUrl || '');
+      setFormData(project);
     } else {
-      resetForm();
+      setFormData({
+        title: '',
+        description: '',
+        summary: '',
+        image: '',
+        demoUrl: '',
+        codeUrl: '',
+        technologies: []
+      });
     }
-  }, [project, open]);
-
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setImage('');
-    setDemoUrl('');
-    setCodeUrl('');
-  };
+  }, [project]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newProject: Project = {
-      id: project ? project.id : `project-${Date.now()}`,
-      title,
-      description,
-      summary: description, // Using description as summary for simplicity
-      image,
-      demoUrl: demoUrl.trim() !== '' ? demoUrl : undefined,
-      codeUrl: codeUrl.trim() !== '' ? codeUrl : undefined,
-      technologies: [] // Empty technologies for now
-    };
-    
-    onSave(newProject);
-    resetForm();
+    if (!formData.title || !formData.description || !formData.image) {
+      return;
+    }
+    onSave(formData as Project);
+  };
+
+  const handleImageUpload = (url: string) => {
+    setFormData(prev => ({ ...prev, image: url }));
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{project ? 'Edit Project' : 'Add New Project'}</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Project Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter project title"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Project Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter project description"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="image">Background Image URL</Label>
-            <Input
-              id="image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="Enter image URL"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="demoUrl">Demo URL</Label>
-            <Input
-              id="demoUrl"
-              value={demoUrl}
-              onChange={(e) => setDemoUrl(e.target.value)}
-              placeholder="Enter demo URL"
-            />
-          </div>
+        <div className="flex-1 overflow-y-auto pr-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="codeUrl">Code URL</Label>
-            <Input
-              id="codeUrl"
-              value={codeUrl}
-              onChange={(e) => setCodeUrl(e.target.value)}
-              placeholder="Enter code URL"
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Save Project</Button>
-          </DialogFooter>
-        </form>
+            <div className="space-y-2">
+              <Label htmlFor="image">Project Image</Label>
+              <ImageUpload
+                onImageUpload={handleImageUpload}
+                currentImage={formData.image}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="summary">Short Summary</Label>
+              <Input
+                id="summary"
+                value={formData.summary}
+                onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="demoUrl">Demo URL</Label>
+              <Input
+                id="demoUrl"
+                type="url"
+                value={formData.demoUrl}
+                onChange={(e) => setFormData(prev => ({ ...prev, demoUrl: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="codeUrl">Code URL</Label>
+              <Input
+                id="codeUrl"
+                type="url"
+                value={formData.codeUrl}
+                onChange={(e) => setFormData(prev => ({ ...prev, codeUrl: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="technologies">Technologies (comma or space-separated)</Label>
+              <Input
+                id="technologies"
+                value={formData.technologies?.join(', ')}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  technologies: e.target.value
+                    .split(/[,\s]+/) // Split by both comma and whitespace
+                    .map(tech => tech.trim())
+                    .filter(Boolean)
+                }))}
+                placeholder="e.g., React, TypeScript, Node.js"
+              />
+            </div>
+          </form>
+        </div>
+        <div className="flex justify-end space-x-4 mt-6 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" onClick={handleSubmit}>
+            {project ? 'Update Project' : 'Add Project'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
