@@ -138,7 +138,7 @@ const AchievementsPage = () => {
             {achievements.map((achievement) => (
               <div 
                 key={achievement.id}
-                className="achievement-card flex flex-col h-full animate-fade-in"
+                className="flex flex-col h-full animate-fade-in"
               >
                 <div className="relative w-full h-48 mb-4 overflow-hidden rounded-lg">
                   <img 
@@ -146,11 +146,11 @@ const AchievementsPage = () => {
                     alt={achievement.title} 
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                   />
-                  <div className="absolute top-3 left-3 bg-primary/90 dark:bg-accent/90 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute bottom-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
                     {formatDate(achievement.date)}
                   </div>
                   <div className="absolute top-3 right-3">
-                    <Badge variant="secondary" className="capitalize bg-white/90 dark:bg-black/90">
+                    <Badge variant="outline" className="bg-white/80 hover:bg-white/90">
                       {achievement.category}
                     </Badge>
                   </div>
@@ -192,11 +192,11 @@ const AchievementsPage = () => {
             
             {/* Add new achievement card */}
             <div 
-              className="achievement-card flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
+              className="flex flex-col items-center justify-center h-48 rounded-lg border border-dashed hover:border-primary cursor-pointer transition-colors"
               onClick={handleAddNewAchievement}
             >
               <Plus className="h-8 w-8 text-primary mb-2" />
-              <span className="text-primary dark:text-accent font-medium">Add Achievement</span>
+              <span className="text-primary font-medium">Add Achievement</span>
             </div>
           </div>
         )}
