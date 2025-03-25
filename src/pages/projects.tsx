@@ -5,12 +5,14 @@ import { Plus } from 'lucide-react';
 import AddProjectDialog from '../components/AddProjectDialog';
 import { projects as initialProjects, Project } from '../lib/projects';
 import { getAllProjects, addProject as fbAddProject, updateProject as fbUpdateProject, deleteProject as fbDeleteProject } from '../services/projectService';
+import { toast } from '../components/ui/use-toast';
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -39,20 +41,31 @@ const ProjectsPage = () => {
     };
     
     fetchProjects();
-  }, []);
+  }, [refreshKey]);
 
   const handleEdit = (project: Project) => {
     setEditingProject(project);
     setIsAddDialogOpen(true);
   };
 
-  const handleDelete = async (projectId: string) => {
+  const handleDeleteProject = async (projectId: string) => {
     try {
       await fbDeleteProject(projectId);
       setProjects(prev => prev.filter(project => project.id !== projectId));
+      toast({
+        title: "Project deleted",
+        description: "Your project has been deleted successfully.",
+      });
+      
+      // Force refresh to get the latest data
+      setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error("Error deleting project:", error);
-      // Handle error (maybe show a toast notification)
+      toast({
+        title: "Error",
+        description: "Failed to delete project. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -70,17 +83,33 @@ const ProjectsPage = () => {
         setProjects(prev => 
           prev.map(p => p.id === project.id ? project : p)
         );
+        toast({
+          title: "Project updated",
+          description: "Your project has been updated successfully.",
+        });
       } else {
         // Add new project
         const { id, ...projectData } = project;
         const newId = await fbAddProject(projectData);
-        setProjects(prev => [...prev, { ...project, id: newId }]);
+        const newProject = { ...project, id: newId };
+        setProjects(prev => [...prev, newProject]);
+        toast({
+          title: "Project added",
+          description: "Your new project has been added successfully.",
+        });
       }
       setIsAddDialogOpen(false);
       setEditingProject(null);
+      
+      // Force refresh to get the latest data
+      setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error("Error saving project:", error);
-      // Handle error (maybe show a toast notification)
+      toast({
+        title: "Error",
+        description: "Failed to save project. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -112,7 +141,7 @@ const ProjectsPage = () => {
                 key={project.id} 
                 project={project}
                 onEdit={() => handleEdit(project)} 
-                onDelete={() => handleDelete(project.id)} 
+                onDelete={() => handleDeleteProject(project.id)} 
               />
             ))}
             
