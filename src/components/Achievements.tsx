@@ -1,37 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Trophy, ArrowUpRight, ArrowRight } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { achievements as allAchievements } from '../lib/achievements';
 import { getAllAchievements } from '../services/achievementService';
-
-const AchievementCard = ({ achievement, isPreview = false }) => (
-  <div className="achievement-card flex flex-col h-full animate-fade-in">
-    <div className="relative w-full h-48 mb-4 overflow-hidden rounded-lg">
-      <img 
-        src={achievement.image} 
-        alt={achievement.title} 
-        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-      />
-      <div className="absolute top-3 left-3 bg-primary/90 dark:bg-accent/90 text-white text-xs px-2 py-1 rounded">
-        {achievement.date}
-      </div>
-    </div>
-    <h3 className="text-xl font-bold mb-2">{achievement.title}</h3>
-    <p className="text-muted-foreground mb-4 flex-grow">{achievement.description}</p>
-    
-    {achievement.link && (
-      <a 
-        href={achievement.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center text-primary dark:text-accent font-medium hover:underline mt-auto"
-      >
-        View Achievement
-        <ArrowUpRight className="ml-1 h-4 w-4" />
-      </a>
-    )}
-  </div>
-);
+import AchievementCard from './AchievementCard';
 
 const Achievements = () => {
   const [achievements, setAchievements] = useState(allAchievements.slice(0, 3));
@@ -81,7 +53,7 @@ const Achievements = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {achievements.slice(0, 3).map((achievement, index) => (
+            {achievements.slice(0, 3).map((achievement) => (
               <AchievementCard 
                 key={achievement.id} 
                 achievement={achievement} 

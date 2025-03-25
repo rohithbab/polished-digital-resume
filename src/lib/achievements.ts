@@ -4,6 +4,7 @@ export interface Achievement {
   description: string;
   date: string;
   image: string;
+  category: string;
   link?: string;
 }
 
