@@ -7,6 +7,7 @@ import { getAllAchievements, addAchievement as fbAddAchievement, updateAchieveme
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/ui/use-toast';
+import { Card, CardHeader, CardContent } from '../components/ui/card';
 
 const AchievementsPage = () => {
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
@@ -136,58 +137,53 @@ const AchievementsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {/* Display existing achievements */}
             {achievements.map((achievement) => (
-              <div 
-                key={achievement.id}
-                className="flex flex-col h-full animate-fade-in"
-              >
-                <div className="relative w-full h-48 mb-4 overflow-hidden rounded-lg">
-                  <img 
-                    src={achievement.image} 
-                    alt={achievement.title} 
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
-                  <div className="absolute bottom-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    {formatDate(achievement.date)}
+              <Card key={achievement.id} className="animate-fade-in group">
+                <CardHeader>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-xl font-bold">{achievement.title}</h3>
+                      <Badge variant="secondary" className="capitalize">
+                        {achievement.category}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatDate(achievement.date)}
+                    </div>
                   </div>
-                  <div className="absolute top-3 right-3">
-                    <Badge variant="outline" className="bg-white/80 hover:bg-white/90">
-                      {achievement.category}
-                    </Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <p className="text-muted-foreground">{achievement.description}</p>
+                    <div className="flex items-center justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(achievement.image, '_blank')}
+                        className="flex items-center gap-1"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        View Achievement
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(achievement)}
+                        className="h-8 w-8"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(achievement.id)}
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <h3 className="text-xl font-bold mb-2">{achievement.title}</h3>
-                <p className="text-muted-foreground mb-4 flex-grow">{achievement.description}</p>
-                
-                <div className="mt-auto flex justify-between items-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(achievement.image, '_blank')}
-                    className="flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    View Achievement
-                  </Button>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(achievement)}
-                      className="h-8 w-8"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(achievement.id)}
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
             
             {/* Add new achievement card */}
