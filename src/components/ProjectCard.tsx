@@ -16,9 +16,10 @@ interface ProjectCardProps {
   project?: Project;
   onEdit: () => void;
   onDelete: () => void;
+  isPreview?: boolean;
 }
 
-const ProjectCard = ({ project, onEdit, onDelete }: ProjectCardProps) => {
+const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCardProps) => {
   // If no project is provided, return a placeholder card
   if (!project) {
     return (
@@ -49,6 +50,18 @@ const ProjectCard = ({ project, onEdit, onDelete }: ProjectCardProps) => {
       </div>
     );
   }
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit();
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete();
+  };
 
   return (
     <div className="project-card flex flex-col h-full animate-fade-in">
@@ -86,18 +99,24 @@ const ProjectCard = ({ project, onEdit, onDelete }: ProjectCardProps) => {
             </a>
           )}
           <button 
-            onClick={onEdit}
-            className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="p-2 rounded-full hover:bg-primary/10 dark:hover:bg-accent/10 transition-colors" 
             aria-label="Edit Project"
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4 text-primary dark:text-accent" />
           </button>
           <button 
-            onClick={onDelete}
-            className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="p-2 rounded-full hover:bg-destructive/10 transition-colors" 
             aria-label="Delete Project"
           >
-            <Trash className="h-4 w-4" />
+            <Trash className="h-4 w-4 text-destructive" />
           </button>
         </div>
       </div>

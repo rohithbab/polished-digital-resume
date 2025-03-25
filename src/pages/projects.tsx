@@ -141,7 +141,8 @@ const ProjectsPage = () => {
                 key={project.id} 
                 project={project}
                 onEdit={() => handleEdit(project)} 
-                onDelete={() => handleDeleteProject(project.id)} 
+                onDelete={() => handleDeleteProject(project.id)}
+                isPreview={false}
               />
             ))}
             

@@ -59,7 +59,7 @@ const Projects = () => {
                 project={project}
                 onEdit={() => {}} 
                 onDelete={() => {}} 
-                isPreview={true}
+                isPreview={false}
               />
             ))}
           </div>
