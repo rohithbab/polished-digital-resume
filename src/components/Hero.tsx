@@ -1,8 +1,40 @@
-
-import { ArrowRight, Download } from 'lucide-react';
+import { ArrowRight, Download, Edit, Save, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const Hero = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [cvLink, setCvLink] = useState('/resume.pdf');
+  const [tempCvLink, setTempCvLink] = useState('');
+
+  useEffect(() => {
+    const loadCvLink = async () => {
+      try {
+        const cvDoc = await getDoc(doc(db, 'cv', 'link'));
+        if (cvDoc.exists()) {
+          setCvLink(cvDoc.data().url || '/resume.pdf');
+        }
+      } catch (error) {
+        console.error('Error loading CV link:', error);
+      }
+    };
+    loadCvLink();
+  }, []);
+
+  const handleSaveCvLink = async () => {
+    try {
+      await setDoc(doc(db, 'cv', 'link'), {
+        url: tempCvLink
+      });
+      setCvLink(tempCvLink);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving CV link:', error);
+    }
+  };
+
   return (
     <section id="home" className="min-h-screen pt-20 flex items-center">
       <div className="section-container grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
@@ -23,10 +55,47 @@ const Hero = () => {
               Contact Me
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
-            <a href="/resume.pdf" download className="btn-secondary group">
-              Download CV
-              <Download className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-1" />
-            </a>
+            <div className="relative">
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={tempCvLink}
+                    onChange={(e) => setTempCvLink(e.target.value)}
+                    placeholder="Enter CV PDF link"
+                    className="px-3 py-1.5 rounded-md border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-accent/50"
+                  />
+                  <button
+                    onClick={handleSaveCvLink}
+                    className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                  >
+                    <Save className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <a href={cvLink} download className="btn-secondary group">
+                    Download CV
+                    <Download className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-1" />
+                  </a>
+                  <button
+                    onClick={() => {
+                      setTempCvLink(cvLink);
+                      setIsEditing(true);
+                    }}
+                    className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
