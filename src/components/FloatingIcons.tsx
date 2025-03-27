@@ -1,9 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { 
   Code, Database, Server, Cpu, Monitor, Terminal, 
   Hash, GitBranch, Cloud, BrainCircuit, MousePointer, 
-  PenTool, Network, Share2, Shield, Zap, Star, Sparkle
+  PenTool, Network, Share2, Shield, Zap, Star, Sparkle,
+  Binary, CircuitBoard, Microchip, HardDrive,
+  Wifi, Radio, Smartphone, Laptop, Tablet
 } from 'lucide-react';
 
 interface Icon {
@@ -18,7 +19,9 @@ interface Icon {
 const techIcons = [
   Code, Database, Server, Cpu, Monitor, Terminal, 
   Hash, GitBranch, Cloud, BrainCircuit, MousePointer, 
-  PenTool, Network, Share2, Shield, Zap, Star, Sparkle
+  PenTool, Network, Share2, Shield, Zap, Star, Sparkle,
+  Binary, CircuitBoard, Microchip, HardDrive,
+  Wifi, Radio, Smartphone, Laptop, Tablet
 ];
 
 const FloatingIcons = () => {
@@ -26,12 +29,13 @@ const FloatingIcons = () => {
   
   useEffect(() => {
     // Create more icons for a denser effect
-    const iconCount = Math.max(40, Math.min(60, Math.floor(window.innerWidth / 40)));
+    const iconCount = Math.max(30, Math.min(50, Math.floor(window.innerWidth / 40)));
     const generatedIcons: Icon[] = [];
     
     const colors = [
-      'text-primary', 'text-accent', 'text-blue-400', 'text-purple-400', 
-      'text-indigo-400', 'text-violet-400', 'text-cyan-400'
+      'text-primary/80', 'text-accent/80', 'text-blue-400/80', 'text-purple-400/80', 
+      'text-indigo-400/80', 'text-violet-400/80', 'text-cyan-400/80', 'text-emerald-400/80',
+      'text-rose-400/80', 'text-amber-400/80'
     ];
     
     for (let i = 0; i < iconCount; i++) {
@@ -40,13 +44,13 @@ const FloatingIcons = () => {
       generatedIcons.push({
         component: <IconComponent strokeWidth={1.5} />,
         position: {
-          top: `${Math.random() * -100}%`, // Start further above viewport
+          top: `${Math.random() * -100}%`,
           left: `${Math.random() * 100}%`,
         },
-        size: Math.floor(Math.random() * 28) + 18, // 18px - 46px (larger)
-        opacity: Math.random() * 0.5 + 0.5, // 0.5 - 1.0 (more visible)
+        size: Math.floor(Math.random() * 40) + 24, // 24px - 64px
+        opacity: Math.random() * 0.7 + 0.3, // 0.3 - 1.0
         color: colors[Math.floor(Math.random() * colors.length)],
-        speed: Math.random() * 25 + 15 // 15s - 40s falling duration
+        speed: Math.random() * 40 + 30 // 30s - 70s falling duration
       });
     }
     
@@ -56,28 +60,25 @@ const FloatingIcons = () => {
     const interval = setInterval(() => {
       setIcons(prev => {
         return prev.map(icon => {
-          // If icon has fallen below the view, reset it to the top
           if (parseFloat(icon.position.top) > 110) {
             return {
               ...icon,
               position: {
-                top: `${Math.random() * -50}%`, // Start well above the viewport
+                top: `${Math.random() * -50}%`,
                 left: `${Math.random() * 100}%`,
               },
-              // Randomize the appearance for variety
-              size: Math.floor(Math.random() * 28) + 18,
-              opacity: Math.random() * 0.5 + 0.5,
+              size: Math.floor(Math.random() * 40) + 24,
+              opacity: Math.random() * 0.7 + 0.3,
               color: colors[Math.floor(Math.random() * colors.length)],
-              speed: Math.random() * 25 + 15
+              speed: Math.random() * 40 + 30
             };
           }
           
-          // Move the icon down
           return {
             ...icon,
             position: {
               ...icon.position,
-              top: `${parseFloat(icon.position.top) + 0.4}%`, // Faster movement
+              top: `${parseFloat(icon.position.top) + 0.2}%`, // Even slower movement
             }
           };
         });
@@ -98,8 +99,8 @@ const FloatingIcons = () => {
             left: icon.position.left,
             opacity: icon.opacity,
             animationDuration: `${icon.speed}s`,
-            filter: 'drop-shadow(0 0 10px currentColor)',
-            zIndex: -5
+            filter: 'drop-shadow(0 0 15px currentColor)',
+            zIndex: -1
           }}
         >
           <div 
@@ -107,7 +108,7 @@ const FloatingIcons = () => {
             style={{ 
               width: icon.size, 
               height: icon.size,
-              filter: 'drop-shadow(0 0 8px currentColor)',
+              filter: 'drop-shadow(0 0 12px currentColor)',
             }}
           >
             {icon.component}
