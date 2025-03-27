@@ -75,6 +75,12 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }: LoginModalProps) => {
           case 'auth/wrong-password':
             errorMessage = 'Incorrect password';
             break;
+          case 'auth/configuration-not-found':
+            errorMessage = 'Authentication service is not properly configured. Please contact support.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your internet connection.';
+            break;
           default:
             errorMessage = `Authentication error: ${err.message}`;
         }
