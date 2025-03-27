@@ -257,7 +257,7 @@ const About = () => {
         const updatedContent: Partial<AboutType> = {
           bio: content,
           title: "About Me",
-          headline: about?.headline || "Data Analyst",
+          headline: about?.headline || "Python Developer",
           email: about?.email || "example@example.com",
           location: about?.location || "Your Location"
         };

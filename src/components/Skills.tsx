@@ -120,7 +120,7 @@ const Skills = () => {
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="mb-4">Skills</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Technical expertise and competencies that I bring to data analytics projects.
+            Technical expertise and competencies that drive innovative software development.
           </p>
         </div>
 

@@ -39,7 +39,7 @@ const Achievements = () => {
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="mb-4">Achievements</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Recognition and noteworthy accomplishments in my data science journey.
+            Recognition and noteworthy accomplishments in my professional journey.
           </p>
         </div>
         

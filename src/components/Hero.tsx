@@ -46,11 +46,11 @@ const Hero = () => {
               <span className="block">M E Rohith Babu</span>
             </h1>
             <h2 className="text-xl md:text-2xl text-muted-foreground font-medium">
-              Data Analyst
+              Python Developer
             </h2>
           </div>
           <p className="text-lg text-muted-foreground max-w-md">
-            Transforming complex data into meaningful insights and driving data-informed decisions.
+            Building robust and scalable applications with Python, specializing in web development, automation, and data processing.
           </p>
           <div className="flex flex-wrap gap-4 pt-2">
             <a href="#contact" className="btn-primary group">

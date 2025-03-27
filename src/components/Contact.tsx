@@ -232,7 +232,7 @@ const Contact = () => {
             <div className="glass-card p-8">
               <h3 className="text-2xl font-bold mb-6">Let's Connect</h3>
               <p className="mb-8 text-muted-foreground">
-                Whether you're looking for a data analyst for your project or just want to say hello, I'd love to hear from you.
+                Whether you're looking for a Python Developer for your project or just want to say hello, I'd love to hear from you.
               </p>
               
               <div className="space-y-6">

@@ -39,7 +39,7 @@ const Projects = () => {
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="mb-4">Projects</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Explore some of my recent data analysis and visualization projects.
+            Explore my portfolio of innovative software solutions and development projects.
           </p>
         </div>
         
