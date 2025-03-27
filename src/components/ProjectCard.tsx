@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Project } from '../lib/projects';
+import { useAuth } from '../context/AuthContext';
 
 interface ProjectCardProps {
   project: Project;
@@ -13,6 +14,8 @@ interface ProjectCardProps {
 }
 
 const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCardProps) => {
+  const { user } = useAuth();
+  
   return (
     <Card className="group relative overflow-hidden">
       <div className="relative h-48 overflow-hidden">
@@ -37,7 +40,7 @@ const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCa
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between items-center">
+      <CardFooter>
         <div className="flex space-x-3">
           {project.demoUrl && (
             <Button variant="outline" size="sm" asChild>
@@ -56,7 +59,7 @@ const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCa
             </Button>
           )}
         </div>
-        {!isPreview && (
+        {!isPreview && user && (
           <div className="flex space-x-2">
             {onEdit && (
               <Button

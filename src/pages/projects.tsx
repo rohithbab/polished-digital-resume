@@ -6,8 +6,10 @@ import AddProjectDialog from '../components/AddProjectDialog';
 import { projects as initialProjects, Project } from '../lib/projects';
 import { getAllProjects, addProject as fbAddProject, updateProject as fbUpdateProject, deleteProject as fbDeleteProject } from '../services/projectService';
 import { toast } from '../components/ui/use-toast';
+import { useAuth } from '../context/AuthContext';
 
 const ProjectsPage = () => {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -147,13 +149,15 @@ const ProjectsPage = () => {
             ))}
             
             {/* Add new project card */}
-            <div 
-              className="project-card flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
-              onClick={handleAddNewProject}
-            >
-              <Plus className="h-8 w-8 text-primary mb-2" />
-              <span className="text-primary dark:text-accent font-medium">Add Project</span>
-            </div>
+            {user && (
+              <div 
+                className="project-card flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
+                onClick={handleAddNewProject}
+              >
+                <Plus className="h-8 w-8 text-primary mb-2" />
+                <span className="text-primary dark:text-accent font-medium">Add Project</span>
+              </div>
+            )}
           </div>
         )}
       </div>
