@@ -11,8 +11,11 @@ import ProjectsPage from "./pages/projects";
 import Achievements from "./pages/Achievements";
 import SkillsPage from "./pages/Skills";
 import { initializeAllCollections } from "./lib/initializeData";
-import FirebaseTest from "./pages/FirebaseTest";
-import FirebaseDirectTest from "./pages/FirebaseDirectTest";
+import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
+import Layout from './components/Layout';
+import { debug } from './utils/debug';
+import './App.css';
 
 const queryClient = new QueryClient();
 
@@ -30,8 +33,9 @@ const FirebaseInitializer = () => {
     const initData = async () => {
       try {
         await initializeAllCollections();
+        debug.log('Firebase data initialized successfully');
       } catch (error) {
-        console.error('Error initializing Firebase data:', error);
+        debug.error('Error initializing Firebase data:', error);
       }
     };
     
@@ -41,27 +45,37 @@ const FirebaseInitializer = () => {
   return null;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <FirebaseInitializer />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/project/:id" element={<ProjectDetails />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/skills" element={<SkillsPage />} />
-          <Route path="/firebase-test" element={<FirebaseTest />} />
-          <Route path="/firebase-direct-test" element={<FirebaseDirectTest />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    debug.log('App component mounted');
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <FirebaseInitializer />
+          <ThemeProvider>
+            <AuthProvider>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/project/:id" element={<ProjectDetails />} />
+                  <Route path="/projects" element={<ProjectsPage />} />
+                  <Route path="/achievements" element={<Achievements />} />
+                  <Route path="/skills" element={<SkillsPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </AuthProvider>
+          </ThemeProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
