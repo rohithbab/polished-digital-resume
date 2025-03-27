@@ -8,8 +8,10 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/ui/use-toast';
 import { Card, CardHeader, CardContent } from '../components/ui/card';
+import { useAuth } from '../context/AuthContext';
 
 const AchievementsPage = () => {
+  const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
@@ -164,22 +166,26 @@ const AchievementsPage = () => {
                         <ExternalLink className="h-4 w-4" />
                         View Achievement
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(achievement)}
-                        className="h-8 w-8"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(achievement.id)}
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
+                      {user && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(achievement)}
+                            className="h-8 w-8"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(achievement.id)}
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -187,13 +193,15 @@ const AchievementsPage = () => {
             ))}
             
             {/* Add new achievement card */}
-            <div 
-              className="flex flex-col items-center justify-center h-48 rounded-lg border border-dashed hover:border-primary cursor-pointer transition-colors"
-              onClick={handleAddNewAchievement}
-            >
-              <Plus className="h-8 w-8 text-primary mb-2" />
-              <span className="text-primary font-medium">Add Achievement</span>
-            </div>
+            {user && (
+              <div 
+                className="flex flex-col items-center justify-center h-48 rounded-lg border border-dashed hover:border-primary cursor-pointer transition-colors"
+                onClick={handleAddNewAchievement}
+              >
+                <Plus className="h-8 w-8 text-primary mb-2" />
+                <span className="text-primary font-medium">Add Achievement</span>
+              </div>
+            )}
           </div>
         )}
       </div>

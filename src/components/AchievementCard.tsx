@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface Achievement {
   id: string;
@@ -21,6 +22,8 @@ interface AchievementCardProps {
 }
 
 const AchievementCard = ({ achievement, onEdit, onDelete, isPreview = false }: AchievementCardProps) => {
+  const { user } = useAuth();
+
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     onEdit?.(achievement);
@@ -65,7 +68,7 @@ const AchievementCard = ({ achievement, onEdit, onDelete, isPreview = false }: A
               <ExternalLink className="h-4 w-4" />
               View Achievement
             </Button>
-            {!isPreview && (
+            {user && !isPreview && (
               <>
                 <Button
                   variant="ghost"
