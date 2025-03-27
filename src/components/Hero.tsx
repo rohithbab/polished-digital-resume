@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
 
 const Hero = () => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [cvLink, setCvLink] = useState('/resume.pdf');
   const [tempCvLink, setTempCvLink] = useState('');
@@ -84,15 +86,17 @@ const Hero = () => {
                     Download CV
                     <Download className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-1" />
                   </a>
-                  <button
-                    onClick={() => {
-                      setTempCvLink(cvLink);
-                      setIsEditing(true);
-                    }}
-                    className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
+                  {user && (
+                    <button
+                      onClick={() => {
+                        setTempCvLink(cvLink);
+                        setIsEditing(true);
+                      }}
+                      className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
