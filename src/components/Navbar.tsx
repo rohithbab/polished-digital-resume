@@ -27,9 +27,10 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
+              <a href="#home" className="nav-link">Home</a>
               <a href="#about" className="nav-link">About</a>
-              <a href="#skills" className="nav-link">Skills</a>
               <a href="#projects" className="nav-link">Projects</a>
+              <a href="#skills" className="nav-link">Skills</a>
               <a href="#achievements" className="nav-link">Achievements</a>
               <a href="#contact" className="nav-link">Contact</a>
               
@@ -107,9 +108,10 @@ const Navbar = () => {
           {/* Mobile Navigation */}
           {isMenuOpen && (
             <div className="md:hidden py-4 space-y-4">
+              <a href="#home" className="block nav-link">Home</a>
               <a href="#about" className="block nav-link">About</a>
-              <a href="#skills" className="block nav-link">Skills</a>
               <a href="#projects" className="block nav-link">Projects</a>
+              <a href="#skills" className="block nav-link">Skills</a>
               <a href="#achievements" className="block nav-link">Achievements</a>
               <a href="#contact" className="block nav-link">Contact</a>
               
