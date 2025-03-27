@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Send, Instagram, Linkedin, MessageSquare, Edit, Save, X, Github } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { useAuthGuard } from '../hooks/useAuthGuard';
+import LoginModal from './ui/LoginModal';
 
 interface SocialLink {
   platform: string;
@@ -21,6 +23,7 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
+  const { isAuthenticated, showLoginModal, setShowLoginModal, handleProtectedAction } = useAuthGuard();
   
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
     {
@@ -101,9 +104,11 @@ const Contact = () => {
   };
 
   const startEditing = (platform: string, url: string, username: string) => {
-    setEditingSocial(platform);
-    setTempUrl(url);
-    setTempUsername(username);
+    handleProtectedAction(() => {
+      setEditingSocial(platform);
+      setTempUrl(url);
+      setTempUsername(username);
+    });
   };
 
   const cancelEditing = () => {
@@ -275,13 +280,15 @@ const Contact = () => {
                       </div>
                     ) : (
                       <>
-                        <button
-                          onClick={() => startEditing(social.platform, social.url, social.username)}
-                          className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors z-10"
-                          aria-label={`Edit ${social.platform} link`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
+                        {isAuthenticated && (
+                          <button
+                            onClick={() => startEditing(social.platform, social.url, social.username)}
+                            className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors z-10"
+                            aria-label={`Edit ${social.platform} link`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        )}
                         {social.url ? (
                           <a 
                             href={social.url} 
@@ -323,6 +330,12 @@ const Contact = () => {
           </p>
         </footer>
       </div>
+
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginSuccess={() => setShowLoginModal(false)}
+      />
     </section>
   );
 };

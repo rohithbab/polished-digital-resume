@@ -10,9 +10,10 @@ interface ProjectCardProps {
   onEdit?: (project: Project) => void;
   onDelete?: (project: Project) => void;
   isPreview?: boolean;
+  isAuthenticated?: boolean;
 }
 
-const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCardProps) => {
+const ProjectCard = ({ project, onEdit, onDelete, isPreview = false, isAuthenticated = false }: ProjectCardProps) => {
   return (
     <Card className="group relative overflow-hidden">
       <div className="relative h-48 overflow-hidden">
@@ -37,7 +38,7 @@ const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCa
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between items-center">
+      <CardFooter className="flex flex-col gap-4">
         <div className="flex space-x-3">
           {project.demoUrl && (
             <Button variant="outline" size="sm" asChild>
@@ -56,7 +57,7 @@ const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCa
             </Button>
           )}
         </div>
-        {!isPreview && (
+        {!isPreview && isAuthenticated && (
           <div className="flex space-x-2">
             {onEdit && (
               <Button

@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { auth } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { debug } from '../../utils/debug';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: () => void;
+  onSuccess?: () => void;
 }
 
-const LoginModal = ({ isOpen, onClose, onLoginSuccess }: LoginModalProps) => {
+const LoginModal = ({ isOpen, onClose, onLoginSuccess, onSuccess }: LoginModalProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,11 +23,19 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }: LoginModalProps) => {
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Remove any leading/trailing whitespace from email and password
+      const trimmedEmail = email.trim();
+      const trimmedPassword = password.trim();
+      
+      debug.log('Attempting login with:', { email: trimmedEmail });
+      await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
+      debug.log('Login successful');
       onLoginSuccess();
+      onSuccess?.(); // Call the custom success callback if provided
       onClose();
     } catch (err) {
-      setError('Invalid email or password');
+      debug.error('Login error:', err);
+      setError('Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
