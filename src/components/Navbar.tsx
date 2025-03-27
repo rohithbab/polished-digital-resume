@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { Menu, X, ChevronDown, LogOut, User, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useAuthGuard } from '../hooks/useAuthGuard';
 import LoginModal from './ui/LoginModal';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { showLoginModal, setShowLoginModal } = useAuthGuard();
 
   const handleLogout = async () => {
     await logout();
@@ -76,7 +75,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowLoginModal(true)}
+                  onClick={() => setIsLoginModalOpen(true)}
                   className="btn-primary"
                 >
                   Login
@@ -132,7 +131,7 @@ const Navbar = () => {
               ) : (
                 <button
                   onClick={() => {
-                    setShowLoginModal(true);
+                    setIsLoginModalOpen(true);
                     setIsMenuOpen(false);
                   }}
                   className="w-full btn-primary"
@@ -146,9 +145,9 @@ const Navbar = () => {
       </nav>
 
       <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={() => setShowLoginModal(false)}
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={() => setIsLoginModalOpen(false)}
       />
     </>
   );

@@ -18,10 +18,9 @@ interface AchievementCardProps {
   onEdit?: (achievement: Achievement) => void;
   onDelete?: (achievement: Achievement) => void;
   isPreview?: boolean;
-  isAuthenticated?: boolean;
 }
 
-const AchievementCard = ({ achievement, onEdit, onDelete, isPreview = false, isAuthenticated = false }: AchievementCardProps) => {
+const AchievementCard = ({ achievement, onEdit, onDelete, isPreview = false }: AchievementCardProps) => {
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     onEdit?.(achievement);
@@ -66,7 +65,7 @@ const AchievementCard = ({ achievement, onEdit, onDelete, isPreview = false, isA
               <ExternalLink className="h-4 w-4" />
               View Achievement
             </Button>
-            {!isPreview && isAuthenticated && (
+            {!isPreview && (
               <>
                 <Button
                   variant="ghost"

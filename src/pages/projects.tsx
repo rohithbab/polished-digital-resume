@@ -6,8 +6,6 @@ import AddProjectDialog from '../components/AddProjectDialog';
 import { projects as initialProjects, Project } from '../lib/projects';
 import { getAllProjects, addProject as fbAddProject, updateProject as fbUpdateProject, deleteProject as fbDeleteProject } from '../services/projectService';
 import { toast } from '../components/ui/use-toast';
-import { useAuthGuard } from '../hooks/useAuthGuard';
-import LoginModal from '../components/ui/LoginModal';
 
 const ProjectsPage = () => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
@@ -15,7 +13,6 @@ const ProjectsPage = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const { isAuthenticated, showLoginModal, setShowLoginModal, handleProtectedAction } = useAuthGuard();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -47,40 +44,34 @@ const ProjectsPage = () => {
   }, [refreshKey]);
 
   const handleEdit = (project: Project) => {
-    handleProtectedAction(() => {
-      setEditingProject(project);
-      setIsAddDialogOpen(true);
-    });
+    setEditingProject(project);
+    setIsAddDialogOpen(true);
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    handleProtectedAction(async () => {
-      try {
-        await fbDeleteProject(projectId);
-        setProjects(prev => prev.filter(project => project.id !== projectId));
-        toast({
-          title: "Project deleted",
-          description: "Your project has been deleted successfully.",
-        });
-        
-        // Force refresh to get the latest data
-        setRefreshKey(prev => prev + 1);
-      } catch (error) {
-        console.error("Error deleting project:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete project. Please try again.",
-          variant: "destructive",
-        });
-      }
-    });
+    try {
+      await fbDeleteProject(projectId);
+      setProjects(prev => prev.filter(project => project.id !== projectId));
+      toast({
+        title: "Project deleted",
+        description: "Your project has been deleted successfully.",
+      });
+      
+      // Force refresh to get the latest data
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddNewProject = () => {
-    handleProtectedAction(() => {
-      setEditingProject(null);
-      setIsAddDialogOpen(true);
-    });
+    setEditingProject(null);
+    setIsAddDialogOpen(true);
   };
 
   const handleSaveProject = async (project: Project) => {
@@ -152,20 +143,17 @@ const ProjectsPage = () => {
                 onEdit={() => handleEdit(project)} 
                 onDelete={() => handleDeleteProject(project.id)}
                 isPreview={false}
-                isAuthenticated={isAuthenticated}
               />
             ))}
             
             {/* Add new project card */}
-            {isAuthenticated && (
-              <div 
-                className="project-card flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
-                onClick={handleAddNewProject}
-              >
-                <Plus className="h-8 w-8 text-primary mb-2" />
-                <span className="text-primary dark:text-accent font-medium">Add Project</span>
-              </div>
-            )}
+            <div 
+              className="project-card flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
+              onClick={handleAddNewProject}
+            >
+              <Plus className="h-8 w-8 text-primary mb-2" />
+              <span className="text-primary dark:text-accent font-medium">Add Project</span>
+            </div>
           </div>
         )}
       </div>
@@ -176,12 +164,6 @@ const ProjectsPage = () => {
         onOpenChange={setIsAddDialogOpen}
         onSave={handleSaveProject}
         project={editingProject}
-      />
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={() => setShowLoginModal(false)}
       />
     </section>
   );

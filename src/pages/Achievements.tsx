@@ -8,8 +8,6 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/ui/use-toast';
 import { Card, CardHeader, CardContent } from '../components/ui/card';
-import { useAuthGuard } from '../hooks/useAuthGuard';
-import LoginModal from '../components/ui/LoginModal';
 
 const AchievementsPage = () => {
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
@@ -17,7 +15,6 @@ const AchievementsPage = () => {
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { isAuthenticated, showLoginModal, setShowLoginModal, handleProtectedAction } = useAuthGuard();
 
   useEffect(() => {
     const fetchAchievements = async () => {
@@ -47,37 +44,31 @@ const AchievementsPage = () => {
   }, [toast]);
 
   const handleEdit = (achievement: Achievement) => {
-    handleProtectedAction(() => {
-      setEditingAchievement(achievement);
-      setIsAddDialogOpen(true);
-    });
+    setEditingAchievement(achievement);
+    setIsAddDialogOpen(true);
   };
 
   const handleDelete = async (achievementId: string) => {
-    handleProtectedAction(async () => {
-      try {
-        await fbDeleteAchievement(achievementId);
-        setAchievements(prev => prev.filter(achievement => achievement.id !== achievementId));
-        toast({
-          title: "Success",
-          description: "Achievement deleted successfully",
-        });
-      } catch (error) {
-        console.error("Error deleting achievement:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete achievement. Please try again.",
-          variant: "destructive",
-        });
-      }
-    });
+    try {
+      await fbDeleteAchievement(achievementId);
+      setAchievements(prev => prev.filter(achievement => achievement.id !== achievementId));
+      toast({
+        title: "Success",
+        description: "Achievement deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting achievement:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete achievement. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddNewAchievement = () => {
-    handleProtectedAction(() => {
-      setEditingAchievement(null);
-      setIsAddDialogOpen(true);
-    });
+    setEditingAchievement(null);
+    setIsAddDialogOpen(true);
   };
 
   const handleSaveAchievement = async (achievement: Achievement) => {
@@ -114,7 +105,8 @@ const AchievementsPage = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -172,26 +164,22 @@ const AchievementsPage = () => {
                         <ExternalLink className="h-4 w-4" />
                         View Achievement
                       </Button>
-                      {isAuthenticated && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(achievement)}
-                            className="h-8 w-8"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(achievement.id)}
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(achievement)}
+                        className="h-8 w-8"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(achievement.id)}
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -199,15 +187,13 @@ const AchievementsPage = () => {
             ))}
             
             {/* Add new achievement card */}
-            {isAuthenticated && (
-              <div 
-                className="flex flex-col items-center justify-center h-48 rounded-lg border border-dashed hover:border-primary cursor-pointer transition-colors"
-                onClick={handleAddNewAchievement}
-              >
-                <Plus className="h-8 w-8 text-primary mb-2" />
-                <span className="text-primary font-medium">Add Achievement</span>
-              </div>
-            )}
+            <div 
+              className="flex flex-col items-center justify-center h-48 rounded-lg border border-dashed hover:border-primary cursor-pointer transition-colors"
+              onClick={handleAddNewAchievement}
+            >
+              <Plus className="h-8 w-8 text-primary mb-2" />
+              <span className="text-primary font-medium">Add Achievement</span>
+            </div>
           </div>
         )}
       </div>
@@ -217,12 +203,6 @@ const AchievementsPage = () => {
         onOpenChange={setIsAddDialogOpen}
         onSave={handleSaveAchievement}
         achievement={editingAchievement}
-      />
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={() => setShowLoginModal(false)}
       />
     </section>
   );

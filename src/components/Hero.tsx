@@ -3,47 +3,35 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useAuthGuard } from '../hooks/useAuthGuard';
-import LoginModal from './ui/LoginModal';
 
 const Hero = () => {
-  const [cvUrl, setCvUrl] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [tempUrl, setTempUrl] = useState('');
-  const { isAuthenticated, showLoginModal, setShowLoginModal, handleProtectedAction } = useAuthGuard();
+  const [cvLink, setCvLink] = useState('/resume.pdf');
+  const [tempCvLink, setTempCvLink] = useState('');
 
   useEffect(() => {
-    const loadCvUrl = async () => {
+    const loadCvLink = async () => {
       try {
-        const cvDoc = await getDoc(doc(db, 'cv', 'url'));
+        const cvDoc = await getDoc(doc(db, 'cv', 'link'));
         if (cvDoc.exists()) {
-          setCvUrl(cvDoc.data().url);
+          setCvLink(cvDoc.data().url || '/resume.pdf');
         }
       } catch (error) {
-        console.error('Error loading CV URL:', error);
+        console.error('Error loading CV link:', error);
       }
     };
-    loadCvUrl();
+    loadCvLink();
   }, []);
 
-  const startEditing = () => {
-    handleProtectedAction(() => {
-      setTempUrl(cvUrl);
-      setIsEditing(true);
-    });
-  };
-
-  const cancelEditing = () => {
-    setIsEditing(false);
-  };
-
-  const saveCvUrl = async () => {
+  const handleSaveCvLink = async () => {
     try {
-      await setDoc(doc(db, 'cv', 'url'), { url: tempUrl });
-      setCvUrl(tempUrl);
+      await setDoc(doc(db, 'cv', 'link'), {
+        url: tempCvLink
+      });
+      setCvLink(tempCvLink);
       setIsEditing(false);
     } catch (error) {
-      console.error('Error saving CV URL:', error);
+      console.error('Error saving CV link:', error);
     }
   };
 
@@ -72,45 +60,40 @@ const Hero = () => {
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={tempUrl}
-                    onChange={(e) => setTempUrl(e.target.value)}
-                    placeholder="Enter CV URL"
-                    className="px-4 py-2 rounded-md border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-accent/50"
+                    value={tempCvLink}
+                    onChange={(e) => setTempCvLink(e.target.value)}
+                    placeholder="Enter CV PDF link"
+                    className="px-3 py-1.5 rounded-md border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-accent/50"
                   />
                   <button
-                    onClick={cancelEditing}
-                    className="p-2 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={saveCvUrl}
-                    className="p-2 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                    onClick={handleSaveCvLink}
+                    className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
                   >
                     <Save className="h-4 w-4" />
                   </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               ) : (
-                <>
-                  {isAuthenticated && (
-                    <button
-                      onClick={startEditing}
-                      className="absolute -top-2 -right-2 p-1.5 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
-                      aria-label="Edit CV link"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                  )}
-                  <a
-                    href={cvUrl || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
+                <div className="flex items-center gap-2">
+                  <a href={cvLink} download className="btn-secondary group">
                     Download CV
+                    <Download className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-1" />
                   </a>
-                </>
+                  <button
+                    onClick={() => {
+                      setTempCvLink(cvLink);
+                      setIsEditing(true);
+                    }}
+                    className="p-1.5 rounded-md hover:bg-secondary/80 dark:hover:bg-secondary/60 transition-colors"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -133,12 +116,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLoginSuccess={() => setShowLoginModal(false)}
-      />
     </section>
   );
 };

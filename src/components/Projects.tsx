@@ -4,12 +4,10 @@ import { Link } from 'react-router-dom';
 import ProjectCard from './ProjectCard';
 import { projects as allProjects } from '../lib/projects';
 import { getAllProjects } from '../services/projectService';
-import { useAuthGuard } from '../hooks/useAuthGuard';
 
 const Projects = () => {
   const [projects, setProjects] = useState(allProjects.slice(0, 3));
   const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated } = useAuthGuard();
   
   useEffect(() => {
     const fetchProjects = async () => {
@@ -61,8 +59,7 @@ const Projects = () => {
                 project={project}
                 onEdit={() => {}} 
                 onDelete={() => {}} 
-                isPreview={true}
-                isAuthenticated={isAuthenticated}
+                isPreview={false}
               />
             ))}
           </div>
