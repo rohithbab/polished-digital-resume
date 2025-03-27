@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Send, Instagram, Linkedin, MessageSquare, Edit, Save, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Send, Instagram, Linkedin, MessageSquare, Edit, Save, X, Github } from 'lucide-react';
+import { db } from '../lib/firebase';
+import { collection, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
 interface SocialLink {
   platform: string;
@@ -22,18 +24,25 @@ const Contact = () => {
   
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
     {
-      platform: 'Instagram',
-      icon: <Instagram className="h-6 w-6 text-primary dark:text-accent" />,
-      url: '',
-      username: '@username',
-      placeholder: 'https://instagram.com/username'
-    },
-    {
       platform: 'LinkedIn',
       icon: <Linkedin className="h-6 w-6 text-primary dark:text-accent" />,
       url: '',
       username: 'linkedin.com/in/username',
       placeholder: 'https://linkedin.com/in/username'
+    },
+    {
+      platform: 'GitHub',
+      icon: <Github className="h-6 w-6 text-primary dark:text-accent" />,
+      url: '',
+      username: 'github.com/username',
+      placeholder: 'https://github.com/username'
+    },
+    {
+      platform: 'Instagram',
+      icon: <Instagram className="h-6 w-6 text-primary dark:text-accent" />,
+      url: '',
+      username: '@username',
+      placeholder: 'https://instagram.com/username'
     },
     {
       platform: 'WhatsApp',
@@ -47,6 +56,28 @@ const Contact = () => {
   const [tempUrl, setTempUrl] = useState('');
   const [tempUsername, setTempUsername] = useState('');
   
+  // Load social links from Firebase on component mount
+  useEffect(() => {
+    const loadSocialLinks = async () => {
+      try {
+        const socialLinksDoc = await getDoc(doc(db, 'socialLinks', 'links'));
+        if (socialLinksDoc.exists()) {
+          const data = socialLinksDoc.data();
+          setSocialLinks(prevLinks => 
+            prevLinks.map(link => ({
+              ...link,
+              url: data[link.platform]?.url || '',
+              username: data[link.platform]?.username || link.username
+            }))
+          );
+        }
+      } catch (error) {
+        console.error('Error loading social links:', error);
+      }
+    };
+    loadSocialLinks();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -79,13 +110,33 @@ const Contact = () => {
     setEditingSocial(null);
   };
 
-  const saveSocialLink = (platform: string) => {
-    setSocialLinks(prev => prev.map(link => 
-      link.platform === platform 
-        ? { ...link, url: tempUrl, username: tempUsername } 
-        : link
-    ));
-    setEditingSocial(null);
+  const saveSocialLink = async (platform: string) => {
+    try {
+      const socialLinksRef = doc(db, 'socialLinks', 'links');
+      const socialLinksDoc = await getDoc(socialLinksRef);
+      
+      const updatedData = {
+        [platform]: {
+          url: tempUrl,
+          username: tempUsername
+        }
+      };
+
+      if (socialLinksDoc.exists()) {
+        await updateDoc(socialLinksRef, updatedData);
+      } else {
+        await setDoc(socialLinksRef, updatedData);
+      }
+
+      setSocialLinks(prev => prev.map(link => 
+        link.platform === platform 
+          ? { ...link, url: tempUrl, username: tempUsername } 
+          : link
+      ));
+      setEditingSocial(null);
+    } catch (error) {
+      console.error('Error saving social link:', error);
+    }
   };
   
   return (
