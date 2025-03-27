@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react';
-import { LineChart, ArrowRight } from 'lucide-react';
+import { LineChart, ArrowRight, Edit, Trash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { skills as allSkills } from '../lib/skills';
 import { getAllSkills } from '../services/skillService';
+import { useAuth } from '../context/AuthContext';
 
-const SkillCard = ({ skill, isPreview = false }) => {
+interface SkillCardProps {
+  skill: any;
+  isPreview?: boolean;
+  onEdit?: (skill: any) => void;
+  onDelete?: (skillId: string) => void;
+}
+
+const SkillCard = ({ skill, isPreview = false, onEdit, onDelete }: SkillCardProps) => {
+  const { user } = useAuth();
+  
   // Helper function to safely handle subtopics whether it's an array or string
   const getSubtopics = () => {
     if (Array.isArray(skill.subtopics)) {
@@ -21,6 +31,28 @@ const SkillCard = ({ skill, isPreview = false }) => {
     <div className="glass-card p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold">{skill.name}</h3>
+        {user && !isPreview && (
+          <div className="flex space-x-2">
+            {onEdit && (
+              <button 
+                onClick={() => onEdit(skill)}
+                className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+                aria-label="Edit Skill"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button 
+                onClick={() => onDelete(skill.id)}
+                className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+                aria-label="Delete Skill"
+              >
+                <Trash className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
       
       <div className="flex justify-between text-sm mb-1">

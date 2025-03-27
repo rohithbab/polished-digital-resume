@@ -4,9 +4,11 @@ import { Plus, Edit, Trash } from 'lucide-react';
 import AddSkillDialog, { Skill } from '../components/AddSkillDialog';
 import { skills as initialSkills } from '../lib/skills';
 import { getAllSkills, addSkill as fbAddSkill, updateSkill as fbUpdateSkill, deleteSkill as fbDeleteSkill } from '../services/skillService';
+import { useAuth } from '../context/AuthContext';
 
 const SkillsPage = () => {
-  const [skills, setSkills] = useState<Skill[]>(initialSkills);
+  const { user } = useAuth();
+  const [skills, setSkills] = useState<Skill[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,19 +21,25 @@ const SkillsPage = () => {
         
         // If there are skills in Firebase, use them. Otherwise, use the local data
         if (data.length > 0) {
-          setSkills(data);
+          setSkills(data.map(skill => ({
+            ...skill,
+            id: skill.id || `skill-${Date.now()}`,
+            subtopics: Array.isArray(skill.subtopics) ? skill.subtopics : []
+          })));
         } else {
-          setSkills(initialSkills);
-          
-          // Optionally seed the database with initial skills
-          // initialSkills.forEach(async (skill) => {
-          //   const { id, ...skillData } = skill;
-          //   await fbAddSkill(skillData);
-          // });
+          setSkills(initialSkills.map(skill => ({
+            ...skill,
+            id: skill.id || `skill-${Date.now()}`,
+            subtopics: Array.isArray(skill.subtopics) ? skill.subtopics : []
+          })));
         }
       } catch (error) {
         console.error("Error fetching skills:", error);
-        setSkills(initialSkills);
+        setSkills(initialSkills.map(skill => ({
+          ...skill,
+          id: skill.id || `skill-${Date.now()}`,
+          subtopics: Array.isArray(skill.subtopics) ? skill.subtopics : []
+        })));
       } finally {
         setIsLoading(false);
       }
@@ -65,14 +73,20 @@ const SkillsPage = () => {
       if (editingSkill) {
         // Update existing skill
         const { id, ...skillData } = skill;
-        await fbUpdateSkill(id, skillData);
+        await fbUpdateSkill(id, {
+          ...skillData,
+          subtopics: Array.isArray(skillData.subtopics) ? skillData.subtopics : []
+        });
         setSkills(prev => 
           prev.map(s => s.id === skill.id ? skill : s)
         );
       } else {
         // Add new skill
         const { id, ...skillData } = skill;
-        const newId = await fbAddSkill(skillData);
+        const newId = await fbAddSkill({
+          ...skillData,
+          subtopics: Array.isArray(skillData.subtopics) ? skillData.subtopics : []
+        });
         setSkills(prev => [...prev, { ...skill, id: newId }]);
       }
       setIsAddDialogOpen(false);
@@ -126,22 +140,24 @@ const SkillsPage = () => {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold">{skill.name}</h3>
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handleEdit(skill)}
-                        className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
-                        aria-label="Edit Skill"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(skill.id)}
-                        className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
-                        aria-label="Delete Skill"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </button>
-                    </div>
+                    {user && (
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => handleEdit(skill)}
+                          className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+                          aria-label="Edit Skill"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(skill.id)}
+                          className="p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors" 
+                          aria-label="Delete Skill"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex justify-between text-sm mb-1">
@@ -171,13 +187,15 @@ const SkillsPage = () => {
             })}
             
             {/* Add new skill card */}
-            <div 
-              className="glass-card p-6 flex flex-col items-center justify-center min-h-[220px] cursor-pointer hover:bg-secondary/20 transition-all"
-              onClick={handleAddNewSkill}
-            >
-              <Plus className="h-10 w-10 text-primary dark:text-accent mb-4" />
-              <span className="text-primary dark:text-accent font-medium text-lg">Add Skill</span>
-            </div>
+            {user && (
+              <div 
+                className="glass-card p-6 flex flex-col items-center justify-center min-h-[220px] cursor-pointer hover:bg-secondary/20 transition-all"
+                onClick={handleAddNewSkill}
+              >
+                <Plus className="h-10 w-10 text-primary dark:text-accent mb-4" />
+                <span className="text-primary dark:text-accent font-medium text-lg">Add Skill</span>
+              </div>
+            )}
           </div>
         )}
       </div>
