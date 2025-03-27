@@ -2,12 +2,19 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { auth } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { debug } from '../../utils/debug';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: () => void;
 }
+
+// Define allowed credentials
+const ALLOWED_CREDENTIALS = [
+  { email: 'rohithbabu031@gmail.com', password: '#rohith@2244' },
+  { email: 'rohithbabu2244@gmail.com', password: '#rohith@2244' }
+];
 
 const LoginModal = ({ isOpen, onClose, onLoginSuccess }: LoginModalProps) => {
   const [email, setEmail] = useState('');
@@ -21,11 +28,64 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }: LoginModalProps) => {
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Log login attempt
+      await debug.info('Login attempt', { email });
+
+      // Check if the credentials are in the allowed list
+      const isAllowed = ALLOWED_CREDENTIALS.some(
+        cred => cred.email === email && cred.password === password
+      );
+
+      if (!isAllowed) {
+        const errorMessage = 'Invalid email or password';
+        setError(errorMessage);
+        await debug.error('Login failed - Invalid credentials', { 
+          email,
+          isAllowed,
+          allowedEmails: ALLOWED_CREDENTIALS.map(c => c.email)
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // If credentials are allowed, proceed with Firebase authentication
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await debug.info('Login successful', { 
+        email,
+        uid: userCredential.user.uid 
+      });
+      
       onLoginSuccess();
       onClose();
-    } catch (err) {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      let errorMessage = 'Invalid email or password';
+      
+      // Handle specific Firebase error codes
+      if (err.code) {
+        switch (err.code) {
+          case 'auth/invalid-email':
+            errorMessage = 'Invalid email format';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'This account has been disabled';
+            break;
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Incorrect password';
+            break;
+          default:
+            errorMessage = `Authentication error: ${err.message}`;
+        }
+      }
+
+      setError(errorMessage);
+      await debug.error('Login failed - Firebase error', { 
+        email,
+        errorCode: err.code,
+        errorMessage: err.message
+      });
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +137,9 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }: LoginModalProps) => {
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm">{error}</p>
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+              <p className="text-red-500 text-sm">{error}</p>
+            </div>
           )}
 
           <button
