@@ -10,6 +10,7 @@ import { About as AboutType } from '../lib/about';
 import { debug } from '../lib/debug';
 import { debugEducation } from '../lib/debugEducation';
 import { debugHobbies } from '../lib/debugHobbies';
+import { useAuth } from '../context/AuthContext';
 
 interface AboutCardProps {
   title: string;
@@ -27,6 +28,8 @@ interface AboutCardData {
 }
 
 const AboutCard = ({ title, icon, content, isActive, onEdit }: AboutCardProps) => {
+  const { user } = useAuth();
+  
   return (
     <div 
       className={`w-full max-w-md transition-all duration-500 ease-in-out ${
@@ -34,13 +37,15 @@ const AboutCard = ({ title, icon, content, isActive, onEdit }: AboutCardProps) =
       }`}
     >
       <div className="p-8 bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg relative">
-        <button 
-          onClick={() => onEdit()}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors"
-          aria-label={`Edit ${title}`}
-        >
-          <Edit className="h-5 w-5" />
-        </button>
+        {user && (
+          <button 
+            onClick={() => onEdit()}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-secondary/80 dark:hover:bg-secondary/40 transition-colors"
+            aria-label={`Edit ${title}`}
+          >
+            <Edit className="h-5 w-5" />
+          </button>
+        )}
         
         <div className="flex items-center mb-6">
           <div className="bg-primary/10 dark:bg-accent/10 p-3 rounded-md mr-4">
