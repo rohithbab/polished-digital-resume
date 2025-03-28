@@ -3,6 +3,7 @@ import About from '../components/About';
 import Projects from '../components/Projects';
 import Skills from '../components/Skills';
 import Achievements from '../components/Achievements';
+import Certifications from '../components/Certifications';
 import Contact from '../components/Contact';
 import FloatingIcons from '../components/FloatingIcons';
 import { debug } from '../utils/debug';
@@ -22,6 +23,7 @@ const Index = () => {
         <Projects />
         <Skills />
         <Achievements />
+        <Certifications />
         <Contact />
       </main>
     </div>

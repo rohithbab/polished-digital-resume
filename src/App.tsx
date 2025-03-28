@@ -10,6 +10,7 @@ import ProjectDetails from "./pages/ProjectDetails";
 import ProjectsPage from "./pages/projects";
 import Achievements from "./pages/Achievements";
 import SkillsPage from "./pages/Skills";
+import CertificationsPage from "./pages/Certifications";
 import { initializeAllCollections } from "./lib/initializeData";
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -100,6 +101,7 @@ const App = () => {
                       <Route path="/projects" element={<ProjectsPage />} />
                       <Route path="/achievements" element={<Achievements />} />
                       <Route path="/skills" element={<SkillsPage />} />
+                      <Route path="/certifications" element={<CertificationsPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Layout>

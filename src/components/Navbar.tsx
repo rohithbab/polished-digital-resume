@@ -32,6 +32,7 @@ const Navbar = () => {
               <a href="#projects" className="nav-link">Projects</a>
               <a href="#skills" className="nav-link">Skills</a>
               <a href="#achievements" className="nav-link">Achievements</a>
+              <a href="#certifications" className="nav-link">Certifications</a>
               <a href="#contact" className="nav-link">Contact</a>
               
               {/* Theme Toggle */}
@@ -113,6 +114,7 @@ const Navbar = () => {
               <a href="#projects" className="block nav-link">Projects</a>
               <a href="#skills" className="block nav-link">Skills</a>
               <a href="#achievements" className="block nav-link">Achievements</a>
+              <a href="#certifications" className="block nav-link">Certifications</a>
               <a href="#contact" className="block nav-link">Contact</a>
               
               {user ? (
