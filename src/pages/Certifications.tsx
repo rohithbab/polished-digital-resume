@@ -111,42 +111,50 @@ const CertificationsPage = () => {
   }
 
   return (
-    <div className="min-h-screen py-20">
+    <section className="py-20">
       <div className="section-container">
-        <div className="mb-8 animate-fade-in">
-          <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+        <div className="text-center mb-12 animate-fade-in">
+          <h2 className="mb-4">Certifications</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            View and manage my professional certifications
+          </p>
+        </div>
+        
+        <div className="flex justify-center animate-fade-in mb-6">
+          <Link to="/" className="btn-secondary">
             Back to Home
           </Link>
         </div>
 
-        <div className="flex justify-between items-center mb-12">
-          <div>
-            <h1 className="text-4xl font-bold mb-4">Certifications</h1>
-            <p className="text-muted-foreground">
-              View and manage my professional certifications
-            </p>
+        {loading ? (
+          <div className="flex justify-center py-12 animate-fade-in">
+            <div className="h-12 w-12 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
           </div>
-          {user && (
-            <Button onClick={() => setIsDialogOpen(true)} className="btn-primary">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Certification
-            </Button>
-          )}
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+            {certifications.map((certification) => (
+              <CertificationCard
+                key={certification.id}
+                certification={certification}
+                onEdit={handleEdit}
+                onDelete={handleDeleteCertification}
+              />
+            ))}
+            
+            {/* Add new certification card */}
+            {user && (
+              <div 
+                className="glass-card p-6 flex flex-col items-center justify-center h-48 bg-secondary/10 dark:bg-secondary/20 rounded-lg cursor-pointer hover:bg-secondary/20 transition-all"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Plus className="h-8 w-8 text-primary mb-2" />
+                <span className="text-primary dark:text-accent font-medium">Add Certification</span>
+              </div>
+            )}
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {certifications.map((certification) => (
-            <CertificationCard
-              key={certification.id}
-              certification={certification}
-              onEdit={handleEdit}
-              onDelete={handleDeleteCertification}
-            />
-          ))}
-        </div>
-
-        {certifications.length === 0 && (
+        {certifications.length === 0 && !user && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No certifications found</p>
           </div>
@@ -159,7 +167,7 @@ const CertificationsPage = () => {
         onSave={editingCertification ? handleUpdateCertification : handleAddCertification}
         certification={editingCertification}
       />
-    </div>
+    </section>
   );
 };
 
