@@ -63,16 +63,14 @@ const Certifications = () => {
           ))}
         </div>
 
-        {certifications.length > 3 && (
-          <div className="text-center">
-            <Button
-              onClick={() => navigate('/certifications')}
-              className="btn-primary"
-            >
-              See More Certifications
-            </Button>
-          </div>
-        )}
+        <div className="text-center">
+          <Button
+            onClick={() => navigate('/certifications')}
+            className="btn-primary"
+          >
+            See More Certifications
+          </Button>
+        </div>
       </div>
     </section>
   );
