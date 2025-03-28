@@ -43,10 +43,21 @@ const AddProjectDialog = ({ open, onOpenChange, onSave, project }: AddProjectDia
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.description || !formData.image) {
+    
+    // Validate required fields (only title, description, and summary are required)
+    if (!formData.title?.trim() || !formData.description?.trim() || !formData.summary?.trim()) {
       return;
     }
-    onSave(formData as Project);
+
+    // Ensure technologies is an array and image has a default value if not provided
+    const projectData = {
+      ...formData,
+      technologies: formData.technologies || [],
+      image: formData.image || 'https://placehold.co/400x400/3b82f6/ffffff?text=Project'
+    };
+
+    // Call onSave with the complete project data
+    onSave(projectData as Project);
   };
 
   const handleImageUpload = (url: string) => {
@@ -134,15 +145,16 @@ const AddProjectDialog = ({ open, onOpenChange, onSave, project }: AddProjectDia
                 placeholder="e.g., React, TypeScript, Node.js"
               />
             </div>
+
+            <div className="flex justify-end space-x-4 mt-6 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {project ? 'Update Project' : 'Add Project'}
+              </Button>
+            </div>
           </form>
-        </div>
-        <div className="flex justify-end space-x-4 mt-6 pt-4 border-t">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" onClick={handleSubmit}>
-            {project ? 'Update Project' : 'Add Project'}
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

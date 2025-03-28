@@ -93,7 +93,7 @@ const ProjectsPage = () => {
         // Add new project
         const { id, ...projectData } = project;
         const newId = await fbAddProject(projectData);
-        const newProject = { ...project, id: newId };
+        const newProject = { ...projectData, id: newId };
         setProjects(prev => [...prev, newProject]);
         toast({
           title: "Project added",
