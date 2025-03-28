@@ -18,12 +18,10 @@ const ProjectCard = ({ project, onEdit, onDelete, isPreview = false }: ProjectCa
   
   return (
     <Card className="group relative overflow-hidden">
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={project.image}
-          alt={project.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+      <div className="relative h-48 overflow-hidden bg-primary/10 dark:bg-accent/10 flex items-center justify-center">
+        <h2 className="text-4xl font-bold text-primary dark:text-accent text-center">
+          {project.title}
+        </h2>
       </div>
       <CardHeader>
         <CardTitle className="text-xl">{project.title}</CardTitle>

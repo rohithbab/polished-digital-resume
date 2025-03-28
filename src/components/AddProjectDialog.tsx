@@ -49,11 +49,14 @@ const AddProjectDialog = ({ open, onOpenChange, onSave, project }: AddProjectDia
       return;
     }
 
+    // Create a placeholder image URL with the project title
+    const placeholderImage = `https://placehold.co/400x400/3b82f6/ffffff?text=${encodeURIComponent(formData.title)}`;
+
     // Ensure technologies is an array and image has a default value if not provided
     const projectData = {
       ...formData,
       technologies: formData.technologies || [],
-      image: formData.image || 'https://placehold.co/400x400/3b82f6/ffffff?text=Project'
+      image: formData.image || placeholderImage
     };
 
     // Call onSave with the complete project data
