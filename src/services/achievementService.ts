@@ -22,8 +22,14 @@ export const addAchievement = async (achievement: Omit<Achievement, 'id'>): Prom
 
 // Update an achievement
 export const updateAchievement = async (id: string, achievement: Partial<Achievement>): Promise<void> => {
-  const docRef = doc(db, COLLECTION_NAME, id);
-  await updateDoc(docRef, achievement);
+  try {
+    const docRef = doc(db, COLLECTION_NAME, id);
+    const { id: _, ...achievementData } = achievement; // Remove id from the data to update
+    await updateDoc(docRef, achievementData);
+  } catch (error) {
+    console.error('Error updating achievement:', error);
+    throw error;
+  }
 };
 
 // Delete an achievement

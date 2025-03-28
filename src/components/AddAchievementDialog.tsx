@@ -19,7 +19,7 @@ interface Achievement {
 interface AddAchievementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (achievement: Omit<Achievement, 'id'>) => void;
+  onSave: (achievement: Achievement) => void;
   achievement?: Achievement | null;
 }
 
@@ -70,12 +70,9 @@ const AddAchievementDialog = ({ open, onOpenChange, onSave, achievement }: AddAc
 
     // Create the achievement object
     const achievementData = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      image: formData.image,
-      date: formData.date,
-      category: formData.category
-    } as Omit<Achievement, 'id'>;
+      ...formData,
+      id: achievement?.id || '' // Include the ID if editing
+    } as Achievement;
 
     // Call the onSave function with the achievement data
     onSave(achievementData);
