@@ -82,7 +82,12 @@ const Hero = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <a href={cvLink} download className="btn-secondary group">
+                  <a 
+                    href={cvLink} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary group"
+                  >
                     Download CV
                     <Download className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-1" />
                   </a>

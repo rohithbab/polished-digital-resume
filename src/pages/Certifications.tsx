@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Certification } from '../lib/certifications';
 import { getAllCertifications, addCertification, updateCertification, deleteCertification } from '../services/certificationService';
 import CertificationCard from '../components/CertificationCard';
@@ -112,6 +113,13 @@ const CertificationsPage = () => {
   return (
     <div className="min-h-screen py-20">
       <div className="section-container">
+        <div className="mb-8 animate-fade-in">
+          <Link to="/" className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Link>
+        </div>
+
         <div className="flex justify-between items-center mb-12">
           <div>
             <h1 className="text-4xl font-bold mb-4">Certifications</h1>
